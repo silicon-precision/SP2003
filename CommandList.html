@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Command List Window</title>
+        <link rel="stylesheet" href="styles/button.css">
+        <link rel="stylesheet" href="styles/style.css">
+        <!--
+        <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+        <script src="/jquery-3.4.1.min.js"></script>
+        -->
+        <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+        <style>
+            #desc {
+                border: 1px dashed gray;
+                width: 750px;
+                font-size: small;
+                font-family: Arial, 바탕체, "times New Roman", Serif;
+                text-align: left;
+                    padding: 5px;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div align="center">
+        <table align="center">
+            <tr>
+                <td>
+                    <!--
+                    <fieldset id="CmdField" style="display:block;border-radius:5px;">
+                    -->
+                    <fieldset>
+                        <!--
+                        <legend align="center"><b>ATE Command List</b></legend>
+                        -->
+                        <legend align="center" class="labeltext">ATE Command List</legend>
+                        <table>
+                            <tr align="center">
+                                <td>
+                                    <!--
+                                    <select id="sourceCmd" name="COMMAND" class="select3" multiple="multiple" size="20" style="width:200px;display:inline-block;">
+                                    -->
+                                    <select id="sourceCmd" name="COMMAND" class="select3" size="19">
+                                        <option class="select3" value="" disabled selected hidden>Select an option</option>
+                                        <!--
+                                        <optgroup label="Samsung Command">
+                                        -->
+                                        <option value=0x01 class='color1'>INIT(All ON)</option>
+                                        <option value=0x02 class='color1'>INIT(All OFF)</option>
+                                        <option value=0x03 class='color1'>CLS Disable</option>
+                                        <option value=0x04 class='color1'>CLS Enable</option>
+                                        <option value=0xD2 class='color1'>All Grp On(LDO)</option>
+                                        <option value=0xD4 class='color1'>All Grp On(LDO)</option>
+                                        <option value=0xDC class='color1'>All Grp Off(LDO)</option>
+                                        <option value=0x11 class='color2'>All CMD 1D Rjt</option>
+                                        <option value=0xB1 class='color2'>1D Rjt.(PWR1 On)</option>
+                                        <option value=0x20 class='color3'>DC Grp</option>
+                                        <option value=0x30 class='color3'>ICC/ICCQ Sep. MSR</option>
+                                        <option value=0x40 class='color3'>AC Grp(LDO)</option>
+                                        <option value=0x80 class='color3'>Incoming Bypass Grp</option>
+                                        <!--
+                                        <option value=0xE1 class='color3'>LDO Data Set</option>
+                                        -->
+                                        <option value=0xC0 class='color3'>Incoming LDO Grp</option>
+                                        <option value=0xE0 class='color2'>PMIC Default Set</option>
+                                        <option value=0xE1 class='color2'>PMIC Data Set</option>
+                                        <option value=0xE2 class='color2'>PMIC Max Set</option>
+                                        <!--
+                                        <option value=0xB2 class='color3'>New DC Grp</option>
+                                        <option value=0xB4 class='color3'>New ICC/ICCQ Sep. MSR</option>
+                                        </optgroup>
+                                        -->
+                                        <optgroup label="Option Command" >
+                                        <option value=0xAF class='color4'>Address Assignment</option>
+                                        <option value=0xAE disabled class='color4'>Command Expand Ctrl</option>
+                                        <!--
+                                        <option value=0xA0 disabled class='color4'>New DC Grp</option>
+                                        <option value=0xF0 disabled class='color4'>New ICC/ICCQ</option>
+                                        -->
+                                        </optgroup>
+                                    </select>
+                                </td>
+                                <td>
+                                    <div id="GroupID" class="hidden">
+                                        <div align="center"><b>Group</b></div>
+                                        <input type="number" id="ChipNo" min=0 max=15 class='width60' step=1 placeholder='Group'>
+                                    </div>
+                                    <div id="DataID" align="center" class="hidden">
+                                        <div align="center"><b>Data</b></div>
+                                        <input id="DecInput" class='width60' placeholder='Value'>
+                                    </div>
+                                    <div id="AddrID" align="center" class="hidden">
+                                        <div align="center"><b>Select</b></div>
+                                        <input id="AddrInput" class='width60' placeholder='Select'>
+                                    </div>
+                                    <!--
+                                    <div id="MultiField" class="hidden">
+                                        <div align="center"><b>Groups</b></div>
+                                        <input id="HexInput" class='select3' placeholder='Hex Value' style="width:60px;">
+                                    </div>
+                                    -->
+                                </td>
+                            </tr>
+                        </table>
+                    </fieldset>
+                </td>
+                <td align="center">
+                    <button class='button orange add width100'><u>A</u>dd &gt;</button></br></br>
+                    <button class='button pink remove width100'>&lt; <u>D</u>elete</button></br>
+                    <button class='button pink removeAll width100'>&lt;&lt; All Delete</button></br></br>
+                    <button class='button blue run width100'>&#9654; <u>R</u>un</button></br>
+                    <button class='button blue runAll width100'>&#9654;&#9654; All Run</button></br></br>
+                    <button id="bt" class="button gray width100" onclick="saveFile()"><u>S</u>ave &#9755;</button></br>
+                    <div class="filebox">
+                        <label for="load" class="button gray width58">&#9755; <u>O</u>pen</label>
+                        <input type="file" id="load" accept=".txt" style="display:none">
+                    </div>
+                    <!--
+                     <input type="file" class="button gray width58" accept=".txt" onchange="OpenFile()">
+                    -->
+                </td>
+                <td>
+                    <fieldset>
+                        <legend id="CmdType" align="center" class="labeltext">Selected ATE Commands</legend>
+                        <table>
+                            <tr align="center" style="display:static">
+                                <td>
+                                    <!--
+                                    <select id="targetCmd" name="COMMAND" class="select3" multiple="multiple" size="21" style="width:300px;"></select>
+                                    -->
+                                    <div id="drop_zone" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);" style="display:inline-block">
+                                    <select id="targetCmd" name="COMMAND" class="select3" size="19" scrollbars='0'></select>
+                                    </div>
+                                </td>
+                                    <!--
+                                <td style="display:inline-block; text-anchor:middle; vertical-align:top">
+                                    <div id="desc" style="display:inline-block; visibility:hidden">
+                                    text display
+                                    </div>
+                                    <textarea cols="31" rows="20"></textarea>
+                                </td>
+                                    -->
+                            </tr>
+                        </table>
+                    </fieldset>
+                </td>
+            </tr>
+        </table>
+
+        <div id="desc" style="visibility:hidden">
+            SP2003 Command Description.
+        </div>
+        <!--
+        <canvas></canvas>
+        </br>
+        <textarea cols="104" rows="3">
+            SP2003 Command Description.
+        </textarea>
+        -->
+    </div>
+    </body>
+
+    <script language="javascript" type="text/javascript">
+        var BankMap;
+        var maxGROUP;
+        var AVin;
+        var ATECmdList = new Array();
+        var overflow = false;
+        var DefaultLevel = 1200;
+        var CurrentLevel = 0;
+        var MaxLevel = 0;
+
+
+        // source Command의 index를 찾기 위한 배열.
+        const CmdTable = [0x01, 0x02, 0x03, 0x04, 0xD2, 0xD4, 0xDC, 0x11, 0xB1, 0x20, 0x30, 0x40, 0x80, 0xC0, 0xE0, 0xE1, 0xE2, 0xAF, 0xAD, 0xAE, 0xA0, 0xF0];
+//        opener.popup = this;
+
+        function sendMessage(cmd) {
+//            console.log(window);
+            let msg = {ATECmd: cmd.toString()};
+            window.opener.postMessage(msg, '*');
+        }
+
+//        $(document).ready(function() {
+//        });
+        $(function() {
+            if( window.location.protocol === 'file:' ) {
+//                console.log(JSON.stringify(JSON.parse(localStorage.getItem("BankMap"))));
+                BankMap = JSON.parse(localStorage.getItem("BankMap"));
+            } else {
+//                console.log(opener);
+                BankMap = window.opener.BankMap;
+//                console.log(window.opener.BankMap);
+            }
+            maxGROUP = BankMap.maxGROUP;
+            AVin = BankMap.AVin;
+//            console.log(`maxDUTs = ${BankMap.maxDUTs}, maxGROUP = ${maxGROUP}`);
+            MaxLevel = AVin;
+            console.log(`AVin = ${AVin}, maxDUTs = ${BankMap.maxDUTs}, maxGROUP = ${maxGROUP}`);
+
+            // 8분기 이상에서는 새로운 ICC/ICCQ, DC Grp 명령이 있어야 한다.
+            if( maxGROUP > 8 ) {
+                $("#sourceCmd option[value=0xA0]").prop("disabled", false);
+                $("#sourceCmd option[value=0xF0]").prop("disabled", false);
+            }
+
+
+        });
+
+        $(document).keydown(function(e) {
+            if( !($("#ChipNo").is(":focus")) && !($("#DecInput").is(":focus")) && !($("#AddrInput").is(":focus")) ) {
+//                console.log(`key value = ${e.which}, ${e.shiftKey}`);
+//                console.log(e);
+                switch( e.which ) {
+                    case 65:    // 'a' key
+                        $('.add').trigger('click');
+                        break;
+                    case 68:    // 'd' key
+                        $('.remove').trigger('click');
+                        break;
+                    case 82:    // 'r' key
+                        $('.run').trigger('click');
+                        break;
+                    case 83:    // 's' key
+                        saveFile();
+                        break;
+                    case 79:    // 'o' key
+                        $('#load').trigger('click');
+                        break;
+                }
+            }
+        });
+
+        function dropHandler(ev) {
+//            console.log('File(s) dropped');
+
+            // Prevent default behavior (Prevent file from being opened)
+            ev.preventDefault();
+
+            if (ev.dataTransfer.items) {
+                // Use DataTransferItemList interface to access the file(s)
+                for (var i = 0; i < ev.dataTransfer.items.length; i++) {
+                    // If dropped items aren't files, reject them
+                    if (ev.dataTransfer.items[i].kind === 'file') {
+                        var file = ev.dataTransfer.items[i].getAsFile();
+//                        console.log(`... file[${i}].name : ${file.name}, size : ${file.size}, type : ${file.type}`);
+                        var textType = /text.*/;
+
+                        fileHandler(file);
+                    }
+                }
+            } else {
+                // Use DataTransfer interface to access the file(s)
+//                for (var i = 0; i < ev.dataTransfer.files.length; i++) {
+//                    console.log('... file[' + i + '].name = ' + ev.dataTransfer.files[i].name);
+//                }
+            }
+        }
+
+        function dragOverHandler(ev) {
+//            console.log('File(s) in drop zone');
+            // Prevent default behavior (Prevent file from being opened)
+            ev.preventDefault();
+        }
+
+        /*
+        function ChangeATECmd() {
+            var sArray = ATECmdList.slice();
+            sArray.forEach(function(cmd, idx) {
+                console.log(`ATECmdList[${idx}] : ${toHexString(cmd)}`);
+            });
+
+            sArray.forEach(function(arr, idx) {
+                var i=0;
+                var cmd = parseInt(arr[i++]);
+                var typ = cmd & 0xF0;
+                if( (typ == 0x20) || (typ == 0x30) || (typ == 0x40) || (typ == 0x80) || (typ == 0xC0) ) {
+                    idx = CmdTable.indexOf(typ);
+                    var group = cmd & 0x0F;
+//                            console.log(`group = ${group}`);
+
+                    $('#ChipNo').val(group);
+                } else {
+                    idx = CmdTable.indexOf(cmd);
+                    if( cmd == 0xAF ) {
+                        $('#AddrInput').val(arr[i++]);
+                    } else if( (cmd == 0x11) || (cmd == 0xB1) ) {          // All CMD 1D Rjt.
+                        $('#DecInput').val(arr[i++]);
+                    } else if( (cmd == 0xE0) || (cmd == 0xE1) || (cmd == 0xE2) ) { // PMIC Default/Data/Max Set.
+                        $('#DecInput').val(arr[i++]);
+                    } else {
+                    }
+                }
+                console.log(`length = ${sArray.length}, cmd = ${cmd}, idx = ${idx}`);
+
+                $(`#sourceCmd option:eq(${idx+1})`).prop('selected', true);
+                var option = $('#sourceCmd option:selected').sort().clone();
+                option.css('color', 'black');
+                addItem(option);
+            });
+        }
+        */
+
+        /*
+        var TargetCmdType = false;
+        $('#CmdType').on('click', function(e) {
+//            console.log(`type = ${e.type}, target value = ${e.target.value}, ${$(this).val()}\n`);
+//            console.log(e);
+            $('select#targetCmd option').remove();      // 전체 option 제거.
+            if( TargetCmdType ) {
+                e.target.innerHTML = 'Selected ATE Commands';
+                TargetCmdType = false;
+                ChangeATECmd();
+            } else {
+                e.target.innerHTML = 'Selected SP2003 Commands';
+                TargetCmdType = true;
+
+                var option = $(`<option>"0xA1", "0x00", "0x00"</option>`);
+                $('#targetCmd').append(option);
+                option = $(`<option>"0xAF", "0x00", "0x00"</option>`);
+                $('#targetCmd').append(option);
+            }
+        });
+        */
+
+        $('#sourceCmd').on('change', function(e) {
+            $('#sourceCmd option').css('border', '0px solid black');
+
+            $('#GroupID').css("visibility", "hidden");
+            $('#DataID').css("visibility", "hidden");
+            $('#AddrID').css("visibility", "hidden");
+//            console.log(`type = ${e.type}, target value = ${e.target.value}, ${$(this).val()}\n`);
+//            console.log(e);
+
+            $(this).find('option').css('color', 'black');
+            $(this).find('option:selected').css('color', 'white').css('border', '1px solid black');
+//    $(this).find('option:selected').css('background-color', 'red');
+            var val = e.target.value;
+            if( (val == 0x20) || (val == 0x30) || (val == 0x40) || (val == 0x80) || (val == 0xC0) || (val == 0xA0) || (val == 0xF0) ) {
+                $('#GroupID').css("visibility", "visible");
+                overflow = false;
+                $('#ChipNo').prop('disabled', false);
+                $('#DecInput').prop('disabled', true);
+                $('#AddrInput').prop('disabled', true);
+                $('#ChipNo').val(0);
+                var max = 15;
+                if( val == 0xA0 ) {                 // new DC Grp.
+                    var max = (maxGROUP + (maxGROUP >> 1) + 1) - 16;
+//                    console.log(`max = ${max}`);
+//                    $('#ChipNo').attr({"max":max});
+                } else if( val == 0xF0 ) {          // new ICC/ICCQ
+                    var max = ((maxGROUP << 1) - 1) - 16;
+//                    console.log(`max = ${max}`);
+//                    $('#ChipNo').attr({"max":max});
+                } else if( val == 0x20 ) {
+                    var max = (maxGROUP + 2) + (maxGROUP >> 1) - 1;
+//                    console.log(`max = ${max}`);
+                    if( max > 15 ) max = 15;
+//                    $('#ChipNo').attr({"max":max});
+                } else if( val == 0x30 ) {
+                    max = (maxGROUP << 1) - 1;
+//                    console.log(`max = ${max}`);
+                    if( max > 15 ) max = 15;
+//                    $('#ChipNo').attr({"max":max});
+                } else {
+//                    $('#ChipNo').attr({"max":15});
+                }
+//                console.log(`max = ${max}`);
+                $('#ChipNo').attr({"max":max});
+//                $('#ChipNo').focus();
+            } else if( (val == 0xB1) || (val == 0x11) || (val == 0xE0) || (val == 0xE1) || (val == 0xE2)) {
+                $('#DataID').css("visibility", "visible");
+                $('#ChipNo').val("");
+                if( (val == 0xB1) || (val == 0x11) ) {
+                    $('#DecInput').val(1);
+                } else {
+                    $('#DecInput').val(0);
+                }
+                $('#ChipNo').prop('disabled', true);
+                $('#DecInput').prop('disabled', false);
+                $('#AddrInput').prop('disabled', true);
+//                $('#DecInput').focus();
+            } else if( val == 0xAF ) {
+                $('#AddrID').css("visibility", "visible");
+                $('#ChipNo').val("");
+                $('#AddrInput').val('0xFFFF');
+                $('#ChipNo').prop('disabled', true);
+                $('#DecInput').prop('disabled', true);
+                $('#AddrInput').prop('disabled', false);
+//                $('#AddrInput').focus();
+            } else {
+                $('#ChipNo').val("");
+                $('#DecInput').val("");
+                $('#AddrInput').val("");
+                $('#ChipNo').prop('disabled', true);
+                $('#DecInput').prop('disabled', true);
+                $('#AddrInput').prop('disabled', true);
+            }
+        });
+
+        function toHexByteString(bytes) {
+            return bytes.map(function(byte) {
+                return '0x' + ('0' + (byte & 0xFF).toString(16).toUpperCase()).slice(-2);
+            }).join(' ')
+        }
+        function toHexString(bytes) {
+            return bytes.map(function(byte) {
+                return '0x' + byte.toString(16).toUpperCase();
+            }).join(' ')
+        }
+
+        function addItem(option) {
+            var cmd = parseInt(option.val());
+//            console.log(`addItem() : cmd = 0x${cmd.toString(16)}`);
+            if( cmd === '' ) return;
+
+            var arr = new Array();
+            var str;
+
+//            arr.push(cmd);
+            if( (cmd == 0x20) || (cmd == 0x30) || (cmd == 0x40) || (cmd == 0x80) || (cmd == 0xC0) || (cmd == 0xA0) || (cmd == 0xF0) ) {
+                if($('#ChipNo').val() === '') {
+//                    console.log('empty');
+                    $('#ChipNo').val(0);
+                }
+                var group = parseInt($('#ChipNo').val());
+                option.text(option.text() + ` "${group}"`);         // targetCmd에 출력할 문자열을 만든다.
+//                console.log(`group = ${group}, max = ${$('#ChipNo').attr('max')}`);
+//                if( cmd == 20 ) {       // DC Grp : group + 2 + (group / 2);
+                    if( overflow == true ) return;
+//                }
+
+                if( group != $('#ChipNo').attr('max') ) {
+                    $('#ChipNo').val(parseInt($('#ChipNo').val()) + 1);
+                }
+                arr.push( cmd | group);
+            } else if( (cmd == 0x11) || (cmd == 0xB1) ) {          // All CMD 1D Rjt.
+                arr.push(cmd);
+                var dut = parseInt($('#DecInput').val());
+                if( isNaN(dut) ) dut = 0;
+
+                option.text(option.text() + ` "${dut}"`);           // targetCmd에 출력할 문자열을 만든다.
+
+                arr.push(dut);            // dut[11:0]
+            } else if( (cmd == 0xE0) || (cmd == 0xE1) || (cmd == 0xE2) ) {          // PMIC Default/Data/Max Set.
+                arr.push(cmd);
+                var level = parseInt($('#DecInput').val());
+                if( isNaN(level) ) level = 0;
+
+                if( cmd == 0xE0 ) DefaultLevel = level;
+                else if( cmd == 0xE1 ) CurrentLevel = level;
+                else if( cmd == 0xE2 ) MaxLevel = level;
+
+                option.text(option.text() + ` "${level}"`);         // targetCmd에 출력할 문자열을 만든다.
+
+                arr.push(level);        // level[11:0]
+            } else if( cmd == 0xAF ) {          // Chip Address Assignment.
+                var select = parseInt($('#AddrInput').val());
+                if( isNaN(select) ) select = 0xFFFF;
+
+                option.text(option.text() + ` "0x${select.toString(16).toUpperCase()}"`);            // targetCmd에 출력할 문자열을 만든다.
+
+                arr.push(cmd);          // select[15:0]
+                arr.push(select);       // select[15:0]
+            } else {
+                arr.push(cmd);
+            }
+
+//            console.log(`add command : ${toHexString(arr)}`);
+
+            var idx = parseInt($('#targetCmd option').index($('#targetCmd option:selected')));            // 선택된 option의 index를 받아온다.
+                                                                                            // 선택된 option이 없다면, "-1"을 return한다.
+                                                                                            // 첫번째 option이 선택되었다면, "0"을 return한다.
+                                                                                            // 두번째 option이 선택되었다면, "1"을 return한다.
+//            console.log(`current index = ${idx}`);
+
+            if( idx == -1 ) {
+                ATECmdList.push(arr);        // 마지막 위치에 명령을 추가한다.
+            } else {
+                ATECmdList.splice(idx+1, 0, arr);        // ATECmdList의 3번째 요소에 arr를 추가한다.
+            }
+//            console.log(`ATECmdList : ${ATECmdList}`);
+
+            if( $('#targetCmd option:selected').length == 0 ) {             // 선택된 option의 개수를 check한다.
+//                console.log(`first option insert`);
+                $('#targetCmd').append(option);           // 기존 option의 가장 끝에 추가한다.
+            } else {
+//                $('#targetCmd').append(option);           // 기존 option의 가장 밑에 추가한다.
+//                $('#targetCmd').prepend(option);            // 기존 option의 가장 위에 추가한다.
+//                $(`#targetCmd option:eq(${index})`).before(option);     // 선택된 option 위에 새로운 option을 추가한다.
+                $(`#targetCmd option:eq(${idx})`).after(option);     // 선택된 option 밑에 새로운 option을 추가한다.
+            }
+            $(`#targetCmd option:eq(${idx+1})`).prop('selected', true);      // 새로 추가된 항목을 선택한다.
+
+
+//            var cnt = $('#targetCmd option:selected').length;
+            var idx = parseInt($('#targetCmd option').index($('#targetCmd option:selected')));            // 선택된 option의 index를 받아온다.(-1 ~ n-2)
+            var length = $('#targetCmd option').length;                                                   // 먼저 option이 추가되었으므로, 1 ~ n
+//            console.log(` option length = ${length}, selected index = ${idx}`);
+//            console.log(`scrollTop = ${$('#targetCmd').scrollTop()}`);
+            $('#targetCmd').scrollTop(17 + parseInt($('#targetCmd').scrollTop()));      // scroll을 bottom으로 이동시킨다.(1개가 추가될때마다 17이 증가한다.)
+
+//            $(`#targetCmd option:eq(${length-1})`).prop('selected', true);      // 새로 추가된 항목을 선택한다.
+
+            $('#targetCmd').focus();                                            // "targetCmd" select로 focus를 이동한다.
+
+//            console.log(` target selected option value = ${$('#targetCmd option:selected').val()}`);
+            if( group > $('#ChipNo').attr('max') ) overflow = true;
+
+//            return arr;
+        }
+
+//        $('#sourceCmd').on('click', function(e) {
+//            console.log(`type = ${e.type}, target value = ${e.target.value}, ${$(this).val()}\n`);
+//            $('#sourceCmd option:selected').css('border', '1px solid black');
+//        });
+
+        $('#sourceCmd').on('dblclick', function() {
+//            console.log("dbclick");
+            $('#sourceCmd option').css('border', '0px solid black');
+            $('#sourceCmd option:selected').css('border', '1px solid black');
+            var option = $('#sourceCmd option:selected').sort().clone();
+            var idx = $('#sourceCmd option').index($('#sourceCmd option:selected'));
+//            console.log(`sourceCmd selected index = ${idx}`);
+            option.css('color', 'black').css('border', '0px solid black');
+            addItem(option);
+            /*
+            var arr = addItem(option);
+
+            var idx = parseInt($('#targetCmd option').index($('#targetCmd option:selected')));            // 선택된 option의 index를 받아온다.
+            if( idx == -1 ) {
+                ATECmdList.push(arr);        // 마지막 위치에 명령을 추가한다.
+            } else {
+                ATECmdList.splice(idx+1, 0, arr);        // ATECmdList의 3번째 요소에 arr를 추가한다.
+            }
+            */
+        });
+
+        $('.add').on('click', function() {
+            $('#sourceCmd option').css('border', '0px solid black');
+            $('#sourceCmd option:selected').css('border', '1px solid black');
+
+            var option = $('#sourceCmd option:selected').sort().clone();
+            var idx = $('#sourceCmd option').index($('#sourceCmd option:selected'));
+
+            option.css('color', 'black').css('border', '0px solid black');
+            addItem(option);
+        });
+
+        function delItem() {
+            var idx = $('#targetCmd option').index($('#targetCmd option:selected'));
+            console.log(`index = ${idx}`);
+            if( idx == -1 ) return;
+
+            $('#targetCmd option:selected').remove();
+            ATECmdList.splice(idx, 1);
+//            ATECmdList.forEach(function(cmd, idx) {
+//                console.log(`ATECmdList[${idx}] : ${toHexString(cmd)}`);
+//            });
+
+//            $(`#targetCmd option:eq(${idx})`).prop('selected', true);     // 삭제된 option 다음의 option을 선택한다.
+            var length = $('#targetCmd option').length;
+//            console.log(`selected index = ${idx}, length = ${length}`);
+            if( length == idx ) idx = idx - 1;
+            $(`#targetCmd option:eq(${idx})`).prop('selected', true);      // 새로 추가된 항목을 선택한다.
+            $('#targetCmd').focus();                                            // "targetCmd" select로 focus를 이동한다.
+        }
+
+        // remove item.
+        $('#targetCmd').on('dblclick', function(e) {
+            if( $(this).val() == null ) return;
+//            console.log(`type = ${e.type}, target value = ${e.target.value}, ${$(this).val()}\n`);
+            delItem();
+        });
+
+        function ATEtoSP2003(ATE) {
+            var str = "";
+            var cmd = ATE[0];
+
+            if( cmd == 0x01 ) {             // INIT(ALL ON)
+                str  = " &rarr; [<span style='color:red'><b>0xA9</b></span> ";
+                str += `<span style='color:blue'><b>${DefaultLevel}</b></span> ...] : All Chip LDO Default Level Set`;
+                str += "</br>";
+                str += " &rarr; [<span style='color:red'><b>0xA1</b></span> ...] : All Chip, All Channel(SW/LDO) ON(with Reject Clear)";
+            } else if( cmd == 0x02 ) {      // INIT(ALL OFF)
+                str  = " &rarr; [<span style='color:red'><b>0xA0</b></span> ...] : All Chip, All Channel(SW/LDO) OFF(with Reject Clear)";
+                str += "</br>"
+                str += " &rarr; [<span style='color:red'><b>0xA9</b></span> ";
+                str += `<span style='color:blue'><b>${DefaultLevel}</b></span> ...] : All Chip LDO Default Level Set`;
+            } else if( cmd == 0x03 ) {      // Clipping Disable
+                str  = " &rarr; [<span style='color:red'><b>0xA3</b></span> ...] : All Chip, All Channel(SW/LDO) Clipping Disable";
+            } else if( cmd == 0x04 ) {      // Clipping Enable
+                str  = " &rarr; [<span style='color:red'><b>0xA2</b></span> ...] : All Chip, All Channel(SW/LDO) Clipping Enable";
+            } else if( cmd == 0x11 ) {      // All CMD 1D Rjt
+                str  = " &rarr; [<span style='color:red'><b>0xA7</b></span> ...] : 1-DUT All Channel(SW/LDO) Reject";
+            } else if( cmd == 0x99 ) {      // Open CMD
+            } else if( cmd == 0xAA ) {      // Close CMD
+            } else if( cmd == 0xB1 ) {      // 1D Rjt(PWR1 ON)
+//                str  = " &rarr; [<span style='color:red'><b>0xA7</b></span> ...] : 1-DUT LDO2 Reject";
+//                str += "</br>";
+//                str += " &rarr; [<span style='color:red'><b>0xA4</b></span> ...] : All Chip, SW/LDO1 ON, LDO2 OFF";
+                str  = " &rarr; [<span style='color:red'><b>0xA4</b></span> ";
+                str += "<span style='color:blue'><b>0x6</b></span>0 ...] : All Chip, SW0/LDO0/SW1/LDO2 ON, LDO1/LDO3 OFF";
+            } else if( cmd == 0xB2 ) {      // new DC Grp
+            } else if( cmd == 0xB4 ) {      // new ICC/ICCQ
+            } else if( cmd == 0xD2 ) {      // All Grp ON(LDO)
+                str  = " &rarr; [<span style='color:red'><b>0xA9</b></span> ";
+                str += `<span style='color:blue'><b>${CurrentLevel}</b></span> ...] : All Chip LDO Current Level Set`;
+                str += "</br>";
+                str += " &rarr; [<span style='color:red'><b>0xA4</b></span> ";
+                str += "<span style='color:blue'><b>0x6</b></span>0 ...] : All Chip, SW0/LDO0/SW1/LDO2 ON, LDO1/LDO3 OFF";
+            } else if( cmd == 0xD4 ) {      // All Grp ON(LDO)
+                str  = " &rarr; [<span style='color:red'><b>0xA9</b></span> ";
+                str += `<span style='color:blue'><b>${CurrentLevel}</b></span> ...] : All Chip LDO Current Level Set`;
+                str += "</br>";
+                str += " &rarr; [<span style='color:red'><b>0xA4</b></span> ";
+                str += "<span style='color:blue'><b>0x6</b></span>0 ...] : All Chip, SW0/LDO0/SW1/LDO2 ON, LDO1/LDO3 OFF";
+            } else if( cmd == 0xDC ) {      // All Grp OFF(LDO)
+                str += " &rarr; [<span style='color:red'><b>0xA4</b></span> ";
+                str += "<span style='color:blue'><b>0x0</b></span>0 ...] : All Chip, All Channel OFF";
+                str += "</br>";
+                str += " &rarr; [<span style='color:red'><b>0xA9</b></span> ";
+                str += `<span style='color:blue'><b>${CurrentLevel}</b></span> ...] : All Chip LDO Current Level Set`;
+            } else if( cmd == 0xE0 ) {      // PMIC Default Set
+                str  = " &rarr; [FPGA Internal Command] : All LDO Default Level Variable Set.";
+            } else if( cmd == 0xE1 ) {      // PMIC Data Set
+                str  = " &rarr; [FPGA Internal Command] : All LDO Current Level Variable Set.";
+            } else if( cmd == 0xE2 ) {      // PMIC Max Set
+                str  = " &rarr; [FPGA Internal Command] : All LDO Max Level Variable Set.";
+            } else if( cmd == 0xAF ) {      // Chip Address Assignment
+                str  = " &rarr; [<span style='color:red'><b>0xA9</b></span> <span style='color:blue'><b>0x";
+                str += `${ATE[1].toString(16).padStart(4, '0').toUpperCase()}`;
+                str += "</b></span>...] : All Chip Address Assignment";
+            } else {
+                var group = cmd & 0x0F;
+                cmd = cmd & 0xF0;
+                if( cmd == 0x20 ) {         // DC Grp
+                    if( group < maxGROUP ) {
+                        str  = " &rarr; [<span style='color:red'><b>0xA5</b></span> <span style='color:blue'><b>0x";
+                        str += `${group.toString(16)}</b></span><span style='color:yellow'><b>6`;
+                        str += `</b></span>...] : Group[${group}] SW/LDO1 ON, LDO2 OFF, Other SP2003 All channel OFF`;
+                    } else {
+                        var select = 0;
+                        str  = " &rarr; [<span style='color:red'><b>0xA8</b></span> <span style='color:blue'><b>0x";
+                        if( group == maxGROUP ) {
+                            for(var i=0; i<(maxGROUP >> 1); i++) {
+                                select |= (1 << (15 - i));
+                            }
+                        } else if( group == (maxGROUP + 1) ) {
+                            for(var i=(maxGROUP >> 1); i<maxGROUP; i++) {
+                                select |= (1 << (15 - i));
+                            }
+                        } else {
+                            var i = (group - (maxGROUP + 2)) << 1;
+                            select = (0xC000 >> i);
+                        }
+                        str += `${select.toString(16).padStart(4, '0').toUpperCase()}</b></span> <span style='color:yellow'><b>0x6`;
+                        str += `</b></span>0 ...] : Group[`;
+                        for(var i=0; i<16; i++) {
+                            if( select & (1 << (15 - i)) ) {
+                                str += `${i} `;
+                            }
+                        }
+                        str += `] Chip SW/LDO1 ON, LDO2 OFF, Other SP2003 All channel OFF`;
+                    }
+                } else if( cmd == 0x30 ) {  // ICC/ICCQ
+                    var chip = group >> 1;
+                    str  = " &rarr; [<span style='color:red'><b>0xA6</b></span> <span style='color:blue'><b>0x";
+                    str += `${chip}</b></span><span style='color:yellow'><b>`;
+                    if( group & 0x1 ) {
+                        str += `1 0x4</b></span>0 ...] : Group[${chip}] SW1/LDO1 ON, SW0/LDO0/LDO2/LDO3 OFF, Other SP2003 All channel OFF`;
+                    } else {
+                        str += `4 0x1</b></span>0 ...] : Group[${chip}] SW0/LDO3 ON, LDO0/LDO1/SW1/LDO2 OFF, Other SP2003 All channel OFF`;
+                    }
+                } else if( cmd == 0x40 ) {  // AC Grp(LDO)
+                    str  = ` &rarr; [<span style='color:red'><b>0xA9</b></span> ...] : All Chip LDO Current Level Set`;
+                    str += "</br>";
+                    str += ` &rarr; [<span style='color:red'><b>0xA4</b></span> <span style='color:yellow'><b>0x6</b></span>0 ...] : All Chip, SW0/LOD0/SW1/LDO2 ON, LDO1/LDO3 OFF`;
+                } else if( cmd == 0x50 ) {  // Data In
+                } else if( cmd == 0x60 ) {  // Data In
+                } else if( cmd == 0x70 ) {  // Data In
+                } else if( cmd == 0x80 ) {  // Incoming Bypass Grp.
+                    str  = " &rarr; [<span style='color:red'><b>0xA5</b></span> <span style='color:blue'><b>0x";
+                    str += `${group.toString(16).toUpperCase()}</b></span><span style='color:yellow'><b>`;
+                    str += `4</b></span> ...] : Group[${group}] SW0/SW1 ON, LDO0/LDO1/LDO2/LDO3 OFF, Other SP2003 All channel OFF`;
+                } else if( cmd == 0xC0 ) {  // Incoming LDO Grp.
+                    str  = " &rarr; [<span style='color:red'><b>0xA5</b></span> <span style='color:blue'><b>0x";
+                    str += `${group.toString(16).toUpperCase()}</b></span><span style='color:yellow'><b>`;
+                    str += `2</b></span> ...] : Group[${group}] LDO0/LDO2 ON, SW0/LDO1/SW1/LDO3 OFF, Other SP2003 All channel OFF`;
+                }
+            }
+
+            return str;
+        }
+        // display item.
+        $('#targetCmd').on('click', function(e) {
+            if( e.target.index == undefined ) return;
+//            console.log(`type = ${e.type}, target value = ${e.target.value}, ${$(this).val()}\n`);
+//            console.log(`index = ${e.target.index}, ATE Cmd : ${ATECmdList[e.target.index]}`);
+
+            var Arr = ATECmdList[e.target.index];
+            // SP2003 Command를 ATE Command 뒤에 추가해서 보여준다.
+            var str = ATEtoSP2003(Arr);
+            $('#desc').html(str);
+            $('#desc').css("visibility", "visible");
+        });
+
+        $('.remove').on('click', function() {
+            delItem();
+        });
+        $('.removeAll').on('click', function() {
+            $('#targetCmd').empty();
+            ATECmdList = [];
+        });
+
+        $('.runAll').on('click', function() {
+            if( window.location.protocol === 'file:' ) {
+                ATECmdList.forEach(function(ATECmd, idx) {
+//                    console.log(`ATECmdList[${idx}] : ` + toHexString(ATECmd));
+                    setTimeout( function() { sendMessage(ATECmd); }, 1000*idx);   // 시간 지연(X)
+//                    sendMessage(ATECmd);
+                });
+            } else {
+                // 부모 창의 변수에 값을 write한다.
+//                opener.ATECmdList = ATECmdList;
+                // 부모 창의 변수를 read해서 console에 출력한다.
+//                console.log(`maxDUTs = ${opener.maxDUTs}`);
+                // 부모 창의 함수를 실행시킨다.
+                ATECmdList.forEach(function(ATECmd, idx) {
+//                    console.log(`ATECmdList[${idx}] : ` + toHexString(ATECmd));
+                    setTimeout( function() { opener.RunCommand(ATECmd); }, 500*idx);   // 시간 지연(X)
+//                    opener.RunCommand(ATECmd);
+                });
+            }
+            $(`#targetCmd option:eq(1)`).attr('selected', 'selected');     // 실행된 option 다음의 option을 선택한다.
+            $('#targetCmd').focus();
+        });
+
+        $('.run').on('click', function() {
+            // 선택된 item을 index를 찾는다.
+            var idx = $('#targetCmd option').index($('#targetCmd option:selected'));
+            if( idx == -1 ) return;
+
+            // 선택된 item의 index와 Command Value의 index는 다를수 있으므로, Command Value의 index를 찾는다.
+
+            // item을 실행한다.
+//            console.log(`ATECmdList[${idx}] : ` + toHexString(ATECmdList[idx]));
+
+            if( window.location.protocol === 'file:' ) {
+                sendMessage(ATECmdList[idx]);
+            } else {
+                opener.RunCommand(ATECmdList[idx]);
+            }
+            var param = {'ATECmdList':'kwangho9'};
+            window.parent.postMessage(param, '*');
+
+            // 다음 item을 선택한다.
+            $(`#targetCmd option:eq(${idx+1})`).prop('selected', true);     // 실행된 option 다음의 option을 선택한다.
+//            window.focus();
+            $('#targetCmd').focus();
+        });
+
+        let saveFile = () => {
+//            console.log(`Command List = ${ATECmdList}`);
+
+            // Convert the text to BLOB.
+            const textToBLOB = new Blob([ATECmdList], { type: "text/plain" });
+
+            const filename = "command_list";            // default file name.
+//            console.log(`filename = ${filename}`);
+
+            let newLink = document.createElement("a");
+//            newLink.download = new Date();
+            newLink.download = filename;
+
+            if (window.webkitURL != null) {
+                newLink.href = window.webkitURL.createObjectURL(textToBLOB);
+            } else {
+                newLink.href = window.URL.createObjectURL(textToBLOB);
+                newLink.style.display = "none";
+                document.body.appendChild(newLink);
+            }
+
+            newLink.click();
+        };
+
+
+        function fileHandler(file) {
+            var textType = /text.*/;
+
+            if( file.type.match(textType)) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var sArray = reader.result.split(',');     // string array.
+//                    console.log(`Loading(${sArray.length}) : ${sArray}`);
+
+                    for(var i=0; i<sArray.length; ) {
+                        var cmd = parseInt(sArray[i++]);             // parseInt(sArray[i++]);
+
+//                        console.log(`file cmd = 0x${cmd.toString(16)}`);
+
+                        var typ = cmd & 0xF0;
+                        if( (typ == 0x20) || (typ == 0x30) || (typ == 0x40) || (typ == 0x80) || (typ == 0xC0) ) {
+                            idx = CmdTable.indexOf(typ);
+                            var group = cmd & 0x0F;
+//                            console.log(`group = ${group}`);
+
+                            $('#ChipNo').val(group);
+                        } else {
+                            idx = CmdTable.indexOf(cmd);
+                            if( cmd == 0xAF ) {
+                                $('#AddrInput').val(sArray[i++]);
+                            } else if( (cmd == 0x11) || (cmd == 0xB1) ) {          // All CMD 1D Rjt.
+                                $('#DecInput').val(sArray[i++]);
+                            } else if( (cmd == 0xE0) || (cmd == 0xE1) || (cmd == 0xE2) ) { // PMIC Default/Data/Max Set.
+                                $('#DecInput').val(sArray[i++]);
+                            } else {
+                            }
+                        }
+
+//                        console.log(`command index = ${idx}`);
+                        $(`#sourceCmd option:eq(${idx+1})`).prop('selected', true);
+                        var option = $('#sourceCmd option:selected').sort().clone();
+                        option.css('color', 'black').css('border', '0px solid black');
+                        addItem(option);
+                        /*
+                        var arr = addItem(option);
+
+                        var idx = parseInt($('#targetCmd option').index($('#targetCmd option:selected')));            // 선택된 option의 index를 받아온다.
+                        if( idx == -1 ) {
+                            ATECmdList.push(arr);        // 마지막 위치에 명령을 추가한다.
+                        } else {
+                            ATECmdList.splice(idx+1, 0, arr);        // ATECmdList의 3번째 요소에 arr를 추가한다.
+                        }
+                        */
+                    }
+                }
+                reader.readAsText(file);
+            } else {
+//                console.log('file not support!');
+            }
+        }
+
+
+        document.getElementById('load').addEventListener('change', function() {
+            var file = this.files[0];
+            console.log(file);
+
+            fileHandler(file);
+
+            $('#load').val("");       // 선택된 파일 이름을 제거한다.
+        });
+
+        /* Web Server없이 로컬에서 실행하는 경우 아래 함수를 실행하면 Error가 발생한다.
+         * 크롬을 실행할 때 "-allow-file-access-from-files" 옵션을 추가하고, 모든 크롬 창을 끄고, 재실행해야 한다.
+         *
+         * "Chrome.exe" 우클릭 -> 속성 -> 바로가기 Tab -> 대상(T)항목에서 "chrome.exe -allow-file-access-from-files"를 입력 후 확인.
+         */
+
+
+
+/* select 요소에 대한 사용법
+https://www.lanian.co.kr/entry/jQuery-select-%EC%84%A0%ED%83%9D-%EA%B0%92-%ED%99%95%EC%9D%B8%ED%95%98%EA%B8%B0
+https://snowple.tistory.com/379
+
+*/
+    </script>
+</html>
+

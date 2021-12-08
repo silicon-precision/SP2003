@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>SP2003 Window</title>
+        <link rel="stylesheet" href="styles/style.css">
+        <!-- jquery Library -->
+        <!--
+        <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+        <script src="./jquery-3.4.1.min.js"></script>
+        -->
+        <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    </head>
+
+    <body>
+        <center>
+        <div id="project">Switch/LDO Status</div>
+        <!--
+        <svg style="background:rgba(0, 255, 255, 0.2); width:100%; height:calc(20vh + 20px); margin:auto; display:block;">
+   <text id="title" text-anchor="middle" x="50%" y="20vh">Software</text>
+</svg>
+        -->
+        <form name="area">
+            <div id="svgContainer" name="container" align="center"></div>
+        </form>
+        </center>
+
+
+		<script language="javascript">
+            var CHIPsPerBank;
+            var maxDUTs;
+            var signalsPerDut;
+            var DUTsPerChip;
+            const xmlns = "http://www.w3.org/2000/svg";
+            const VIN = "2.5V";
+
+            function getUrlParams() {
+                var params = {};
+                window.location.search.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(str, key, value) { params[key] = value; });
+                return params;
+            }
+
+//            var DutInfo;
+            var OnOff;
+            var Reject;
+            var Common;
+//            var CLSFlags;
+//            var TSD5Flags;
+//            var TSD7Flags;
+            var AVin;
+            var Ldo02Level;
+            var Ldo13Level;
+            var DutsPerChip;
+
+            var SelectedChip;
+            var SP2003;
+
+
+            $(document).ready(function(){
+                // window width & height.
+                console.log(`Window position : (${window.screenX}, ${window.screenY}), size : ${window.innerWidth} x ${window.innerHeight}`);
+
+                // 부모 윈도우의 요소를 read한다.
+//                var site = opener.document.getElementById('siteNumber').value;
+
+                // 부모 윈도우의 변수를 참조한다.
+//                maxDUTs = opener.maxDUTs;
+//                DutInfo = opener.DutInfo;
+
+                var nChip;
+                var nPPS;
+
+
+
+                var nGROUP = NaN;
+                var nPageCnt;
+
+                var oParams = getUrlParams();
+//                console.log(`oParams = ${oParams}, ${JSON.stringify(oParams)}`);
+                if( jQuery.isEmptyObject(oParams) ) {
+                    if( window.location.protocol === 'file:' ) {
+                        SelectedChip = JSON.parse(localStorage.getItem("SelectedChip"));
+                        SP2003 = JSON.parse(localStorage.getItem("SP2003"));
+                        nPPS = JSON.parse(localStorage.getItem("nPPS"));
+                        AVin = JSON.parse(localStorage.getItem("AVin"));
+                    } else {
+                        SelectedChip = (opener === null) ? 0 : opener.SelectedChip;
+                        SP2003 = (opener === null) ? 0 : opener.SP2003;
+                        nPPS = (opener === null) ? 0 : opener.nPPS;
+                        AVin = (opener === null) ? 0 : opener.AVin;
+                    }
+                    // 선택된 Chip의 정보 : iBank, iPage, nChip, nDut[] 
+                    // SelectedChip Object
+                    console.log(`Selected Chip = ${JSON.stringify(SelectedChip)}`);
+
+                    // Bank 구성 정보 : AVin, ChipsPerBank, device, maxDUTs, DutsPerChip, BankCnt, ...
+                    // Emulator Chip의 상태 : Assign, Group, OnOff, Reject, LDO02Level, LDO13Level, COMMON, ..
+                    // SP2003 Object
+                    console.log(`SP2003 : ${JSON.stringify(SP2003)}`);
+
+                    console.log(`AVin = ${AVin}`);
+                    console.log(`nPPS = ${nPPS}`);
+
+                    iBank = SelectedChip.iBank;
+                    iPage = SelectedChip.iPage;
+                    nChip = SelectedChip.nChip;
+                    nDut = SelectedChip.nDuts;
+
+                    if( SP2003.Assign == 1 ) nGROUP = SP2003.Group;
+                    OnOff = SP2003.OnOff;
+                    Reject = SP2003.Reject;
+                    Common = SP2003.COMMON;
+                    Ldo02Level = SP2003.LDO02Level;
+                    Ldo13Level = SP2003.LDO13Level;
+
+                    console.log(`SP2003.Assign = ${SP2003.Assign}, SP2003.Group = ${SP2003.Group}`);
+                } else {
+                    nChip = parseInt(oParams.CHIP);
+                    iBank = parseInt(oParams.BANK);
+                    nGROUP = parseInt(oParams.GROUP);
+                    OnOff = parseInt(oParams.ONOFF);                  // 현재 PMIC의 상태
+                    Reject = parseInt(oParams.REJECT);                  // 현재 PMIC의 상태
+                    Common = parseInt(oParams.COMMON);                  // 현재 PMIC의 상태
+//                CLSFlags = parseInt(oParams.CLS);
+//                TSD5Flags = parseInt(oParams.TSD150);
+//                TSD7Flags = parseInt(oParams.TSD170);
+                    AVin = parseFloat(oParams.AVIN);
+                    Ldo02Level = parseInt(oParams.LEVEL0);
+                    Ldo13Level = parseInt(oParams.LEVEL1);
+                }
+
+                console.log(`iBank = ${iBank}, iPage = ${iPage}, nChip = ${nChip}, nDut : ${nDut}, nGROUP = ${nGROUP}`);
+                console.log(`OnOff = 0x${OnOff.toString(16)}, Reject = 0x${Reject.toString(16)}, Common = ${Common.toString(16)}`);
+
+                console.log(`AVin = ${AVin}, LDO02Level = ${Ldo02Level}, LDO13Level = 0x${Ldo13Level}`);
+
+                console.log(`nPPS = ${nPPS}, nChip = ${nChip}, nDut = ${nDut}`);
+
+                // SVG(Scalable Vector Graphics) 영역 생성하기.
+                var svgTag = document.createElementNS(xmlns, "svg");
+                svgTag.setAttributeNS(null, "id", "ChipView");
+                svgTag.setAttributeNS(null, "align", "center");
+                var w = 460;
+                var h = 331;//350;
+                svgTag.setAttributeNS(null, "width", w.toString());
+                svgTag.setAttributeNS(null, "height", h.toString());
+                svgTag.setAttributeNS(null, "onclick", "showPosition(event)");
+
+                console.log(`SVG width(${svgTag.getAttribute('width')}), height(${svgTag.getAttribute('height')})`);
+
+                var $elem;
+                var sx;
+                var sy;
+                var x;
+                var y;
+                var w;
+                var h;
+
+                sx = 10;
+                sy = 30;
+                w = 160;    // width : 160
+                h = 300;    // height : 320
+                l = 100;    // length : 100
+
+                x = sx;
+                y = sy;
+                // SPI 통신 입력
+                $elem = $(document.createElementNS(xmlns, "line"));
+                $elem.attr({'x1':x, 'y1':y+20, 'x2':x+l, 'y2':y+20, 'class':'greenStroke'});
+                $elem.appendTo(svgTag);
+                $elem = $(document.createElementNS(xmlns, 'text'));
+                $elem.attr({'x':x+(l>>1), 'y':y+10, 'class':'spiText effect'}).text(`SPI[${iBank}]`);
+//                $elem.attr({'x':x+(l>>1), 'y':y+10, 'class':'svgText color2'}).text(`SPI[${iBank}]`);
+                $elem.appendTo(svgTag);
+                // SP2003 rect
+                x = sx + l + (w >> 1); // 10 + 100 + (160 / 2)
+                $elem = $(document.createElementNS(xmlns, 'text'));
+                $elem.attr({'x':x, 'y':y+20, 'class':'chipText effect'}).text(`${nChip}-CHIP(${nGROUP})`);
+//                $elem.attr({'x':x, 'y':y+20, 'class':'svgText color5'}).text(`${nChip}-CHIP(${nGROUP})`);
+                $elem.appendTo(svgTag);
+
+                x = sx + l;
+                $elem = $(document.createElementNS(xmlns, 'rect'));
+//                $elem.attr({'x':x, 'y':y, 'rx':5, 'ry':5, 'width':w, 'height':h, 'id':`PMIC${nChip}`, 'stroke':'black', 'stroke-width':1, 'fill':'transparent', 'onclick':'Test()'});
+                $elem.attr({'x':x, 'y':y, 'rx':5, 'ry':5, 'width':w, 'height':h, 'id':`PMIC${nChip}`, 'class':'SP2003'});
+                $elem.appendTo(svgTag);
+                // SPI 통신 출력
+                x = sx + l + w;
+                $elem = $(document.createElementNS(xmlns, "line"));
+                $elem.attr({'x1':x, 'y1':y+20, 'x2':x+l, 'y2':y+20, 'class':'greenStroke'});
+                $elem.appendTo(svgTag);
+                $elem = $(document.createElementNS(xmlns, 'text'));
+                $elem.attr({'x':x+(l>>1), 'y':y+10, 'class':'spiText effect'}).text(`SPI[${iBank}]`);
+//                $elem.attr({'x':x+(l>>1), 'y':y+10, 'class':'svgText color2'}).text(`SPI[${iBank}]`);
+                $elem.appendTo(svgTag);
+
+                sy = sy + 80;
+                h = 100;
+                for(var n=0; n<2; n++) {        // PMIC-0, PMIC-1
+                    x = sx;                     // 10
+                    y = sy + (120 * n);         // 110, 230
+//                    console.log(`0. sx = ${sx}, sy = ${sy}, x = ${x}, y = ${y}`);
+                    // PPS input line draw.
+                    color = (n == 0) ? 'blue' : 'red';
+//                    color = (n == 0) ? 'color3' : 'color4';
+                    $elem = $(document.createElementNS(xmlns, "line"));
+                    $elem.attr({'x1':x, 'y1':y, 'x2':x+120, 'y2':y, 'stroke':color, 'stroke-width':2, 'opacity':1});
+//                    $elem.attr({'x1':x, 'y1':y, 'x2':x+120, 'y2':y, 'class':color, 'stroke-width':2, 'opacity':1});
+                    $elem.appendTo(svgTag);
+                    $elem = $(document.createElementNS(xmlns, 'text'));
+                    $elem.attr({'x':x+40, 'y':y-10, 'class':'ppsText effect', 'fill':color}).text(`PPS #${nPPS+n}`);
+//                    $elem.attr({'x':x+40, 'y':y-10, 'class':`svgText ${color}`}).text(`PPS #${nPPS+n}`);
+                    $elem.appendTo(svgTag);
+
+                    // PMIC text & rect draw.
+                    x = sx + 100 + 40;
+                    $elem = $(document.createElementNS(xmlns, 'text'));
+                    if( n == 0 ) {
+                        $elem.attr({'x':x+40, 'y':y-26, 'class':'effect gray'}).text(`1'st PMIC`);
+                    } else {
+                        $elem.attr({'x':x+40, 'y':y-26, 'class':'effect gray'}).text(`2'nd PMIC`);
+                    }
+                    $elem.appendTo(svgTag);
+                    $elem = $(document.createElementNS(xmlns, 'rect'));
+                    $elem.attr({'x':x, 'y':y-20, 'rx':5, 'ry':5, 'width':80, 'height':100, 'class':'PMIC'});
+                    $elem.appendTo(svgTag);
+//                    console.log(`1. x = ${x}, y = ${y}`);
+
+                    // 각 요소의 stroke, stroke-width, visibility, fill 옵션이 변경된다.
+                    // PMIC switch draw.
+                    // PMIC LDO1 draw.
+                    // PMIC LDO2 draw.
+                    x = sx + l + (w>>1);
+                    y = sy + (120 * n);         // sy + (dy * n);
+//                    console.log(`n = ${n}, x = ${x}, y = ${y}`);
+                    for(var i=0; i<3; i++) {
+                        console.log(`1. sx = ${sx}, sy = ${sy}, x = ${x}, y = ${y}`);
+                        // x = 190, y = 110/110/140/230/230/260
+                        if( i == 0 ) {          // Switch draw.
+                            // 1'st PMIC switch. -> (190, 120)
+                            // switch in line
+                            $elem = $(document.createElementNS(xmlns, "line"));
+//                            $elem.attr({'x1':x-60, 'y1':y, 'x2':x-20, 'y2':y, 'class':`PMIC${n+1} SW`, 'stroke':'black', 'stroke-width':1});
+                            $elem.attr({'x1':x-60, 'y1':y, 'x2':x-20, 'y2':y, 'class':`PMIC${n+1} SW`});
+                            $elem.appendTo(svgTag);
+                            // switch out line.
+                            $elem = $(document.createElementNS(xmlns, "line"));
+//                            $elem.attr({'x1':x+20, 'y1':y, 'x2':x+180, 'y2':y, 'class':`PMIC${n+1} SW`, 'stroke':'black', 'stroke-width':1});
+                            $elem.attr({'x1':x+20, 'y1':y, 'x2':x+180, 'y2':y, 'class':`PMIC${n+1} SW`});
+                            $elem.appendTo(svgTag);
+//                            console.log(`PMIC out #1 : x = ${x+80}, y = ${y}`);
+                            $elem = $(document.createElementNS(xmlns, "circle"));
+//                            $elem.attr({'cx':x-20, 'cy':y, 'r':3, 'class':`PMIC${n+1} SW`, 'stroke':'black', 'stroke-width':1, 'fill':'transparent', 'visibility':'visible'});
+                            $elem.attr({'cx':x-20, 'cy':y, 'r':3, 'class':`PMIC${n+1} SW`});
+                            $elem.appendTo(svgTag);
+                            $elem = $(document.createElementNS(xmlns, "circle"));
+//                            $elem.attr({'cx':x+20, 'cy':y, 'r':3, 'class':`PMIC${n+1} SW`, 'stroke':'black', 'stroke-width':1, 'fill':'transparent', 'visibility':'visible'});
+                            $elem.attr({'cx':x+20, 'cy':y, 'r':3, 'class':`PMIC${n+1} SW`});
+                            $elem.appendTo(svgTag);
+                            // switch OFF line.
+                            $elem = $(document.createElementNS(xmlns, "line"));
+//                            $elem.attr({'x1':x-20, 'y1':y, 'x2':x+20, 'y2':y-10, 'class':`PMIC${n+1} SW OFF`, 'stroke':'black', 'visibility':'visible'});
+                            $elem.attr({'x1':x-20, 'y1':y, 'x2':x+20, 'y2':y-10, 'class':`PMIC${n+1} SW OFF`});
+                            $elem.appendTo(svgTag);
+                            // switch ON line
+                            $elem = $(document.createElementNS(xmlns, "line"));
+//                            $elem.attr({'x1':x-20, 'y1':y, 'x2':x+20, 'y2':y, 'class':`PMIC${n+1} SW ON`, 'stroke':'blue', 'visibility':'hidden'});
+                            $elem.attr({'x1':x-20, 'y1':y, 'x2':x+20, 'y2':y, 'class':`PMIC${n+1} SW ON`});
+                            $elem.appendTo(svgTag);
+                        } else {                // LDO1/2 draw.
+                            // LDO1 -> (190, 120+30)
+                            // LDO2 -> (190, 120+30+30)
+                            y = y + 30;
+                            //// 1.
+                            $elem = $(document.createElementNS(xmlns, "circle"));           // 1'st PMIC SW 연결점.
+                            $elem.attr({'cx':x-60, 'cy':y-30, 'r':3, 'stroke':'black', 'fill':'black'});
+                            $elem.appendTo(svgTag);
+
+                            //// 2.
+                            $elem = $(document.createElementNS(xmlns, "line"));
+                            $elem.attr({'x1':x-60, 'y1':y-30, 'x2':x-60, 'y2':y, 'class':`PMIC${n+1} LDO${i} LDO${i+1}`, 'stroke':'black', 'stroke-width':1, 'opacity':1});
+                            $elem.appendTo(svgTag);
+
+                            //// 3.
+                            $elem = $(document.createElementNS(xmlns, "line"));
+                            $elem.attr({'x1':x-60, 'y1':y, 'x2':x-20, 'y2':y, 'class':`PMIC${n+1} LDO${i}`, 'stroke':'black', 'stroke-width':1, 'opacity':1});
+                            $elem.appendTo(svgTag);
+
+                            // khjung : no used(fill attribute) 
+//                            $elem = $(document.createElementNS(xmlns, "polyline"));
+//                            $elem.attr({'points':'10,110 130,110 170,110', 'stroke':'black', 'stroke-width':1, 'opacity':1});
+//                            $elem.appendTo(svgTag);
+
+                            // LDO1 Out line.
+                            if( n == 0 ) {          // PMIC-0
+                                // internal short case : 70, 60
+                                $elem = $(document.createElementNS(xmlns, "line"));
+                                $elem.attr({'x1':x+20, 'y1':y, 'x2':x+(180 - (40*i)), 'y2':y, 'id':`line${n}${i}`, 'class':`PMIC${n+1} LDO${i}`, 'stroke':'black', 'stroke-width':1, 'opacity':1});
+                                $elem.appendTo(svgTag);
+                                if( i == 2 ) {
+                                    // internal short case.
+                                    $elem = $(document.createElementNS(xmlns, "circle"));       // 1'st LDO1 Aout 연결.
+                                    $elem.attr({'cx':x+100, 'cy':y+90, 'r':3, 'id':`circle${n}${i}`, 'stroke':'black', 'fill':'black'});
+                                    $elem.appendTo(svgTag);
+
+                                    $elem = $(document.createElementNS(xmlns, "line"));     // PMIC2 LDO Out2 연결선.
+                                    $elem.attr({'x1':x+100, 'y1':y, 'x2':x+100, 'y2':y+90, 'id':`line1${n}${i}`, 'class':`PMIC${n+1} LDO${i}`, 'stroke':'black', 'stroke-width':1, 'opacity':1});
+                                    $elem.appendTo(svgTag);
+                                }
+                            } else {                // PMIC-1
+                                // internal short case : 60, 70
+                                $elem = $(document.createElementNS(xmlns, "line"));
+                                $elem.attr({'x1':x+20, 'y1':y, 'x2':x+(60 + (40*i)), 'y2':y, 'id':`line${n}${i}`, 'class':`PMIC${n+1} LDO${i}`, 'stroke':'black', 'stroke-width':1, 'opacity':1});
+                                $elem.appendTo(svgTag);
+                                if( i == 2 ) {
+                                    // internal short case.
+                                    $elem = $(document.createElementNS(xmlns, "circle"));       // 1'st LDO1 Aout 연결.
+                                    $elem.attr({'cx':x+140, 'cy':y-150, 'r':3, 'id':`circle${n}${i}`, 'stroke':'black', 'fill':'black'});
+                                    $elem.appendTo(svgTag);
+                                    $elem = $(document.createElementNS(xmlns, "line"));     // PMIC2 LDO Out2 연결선.
+                                    $elem.attr({'x1':x+140, 'y1':y, 'x2':x+140, 'y2':y-150, 'id':`line1${n}${i}`, 'class':`PMIC${n+1} LDO${i}`, 'stroke':'black', 'stroke-width':1, 'opacity':1});
+                                    $elem.appendTo(svgTag);
+                                }
+                            }
+
+//                            console.log(`2. x = ${x}, y = ${y}`);
+//                            console.log(`PMIC out #2 : x = ${x+80}, y = ${y}`);
+                            $elem = $(document.createElementNS(xmlns, "circle"));
+                            $elem.attr({'cx':x-20, 'cy':y, 'r':3, 'class':`PMIC${n+1} LDO${i}`, 'stroke':'black', 'fill':'transparent', 'visibility':'visible'});
+                            $elem.appendTo(svgTag);
+                            $elem = $(document.createElementNS(xmlns, "circle"));
+                            $elem.attr({'cx':x+20, 'cy':y, 'r':3, 'class':`PMIC${n+1} LDO${i}`, 'stroke':'black', 'fill':'transparent', 'visibility':'visible'});
+                            $elem.appendTo(svgTag);
+                            $elem = $(document.createElementNS(xmlns, "line"));
+                            $elem.attr({'x1':x-20, 'y1':y-8, 'x2':x+20, 'y2':y-8, 'class':`PMIC${n+1} LDO${i} OFF`, 'stroke':'black', 'stroke-width':1, 'opacity':1});
+                            $elem.appendTo(svgTag);
+                            $elem = $(document.createElementNS(xmlns, "line"));
+                            $elem.attr({'x1':x, 'y1':y-15, 'x2':x, 'y2':y-8, 'class':`PMIC${n+1} LDO${i} OFF`, 'stroke':'black', 'stroke-width':1, 'opacity':1});
+                            $elem.appendTo(svgTag);
+                            $elem = $(document.createElementNS(xmlns, "line"));
+                            $elem.attr({'x1':x-20, 'y1':y, 'x2':x+20, 'y2':y, 'class':`PMIC${n+1} LDO${i} ON`, 'stroke':'blue', 'stroke-width':1, 'opacity':1, 'visibility':'hidden'});
+                            $elem.appendTo(svgTag);
+                            $elem = $(document.createElementNS(xmlns, "line"));
+                            $elem.attr({'x1':x, 'y1':y-8, 'x2':x, 'y2':y, 'class':`PMIC${n+1} LDO${i} ON`, 'stroke':'blue', 'stroke-width':1, 'opacity':1, 'visibility':'hidden'});
+                            $elem.appendTo(svgTag);
+//                            console.log(`2. sx = ${sx}, sy = ${sy}, x = ${x}, y = ${y}`);
+                        }
+//                        console.log(`3. sx = ${sx}, sy = ${sy}, x = ${x}, y = ${y}`);
+                    }
+
+                    // Channel Name Text Create.
+                    $elem = $(document.createElementNS(xmlns, 'text'));
+                    $elem.attr({'x':x, 'y':y-53, 'class':'channelText'}).text(`SW${n}`);
+                    $elem.appendTo(svgTag);
+                    $elem = $(document.createElementNS(xmlns, 'text'));
+                    $elem.attr({'x':x, 'y':y-23, 'class':'channelText'}).text(`LDO${n*2}`);
+                    $elem.appendTo(svgTag);
+                    $elem = $(document.createElementNS(xmlns, 'text'));
+                    $elem.attr({'x':x, 'y':y+7, 'class':'channelText'}).text(`LDO${(n*2)+1}`);
+                    $elem.appendTo(svgTag);
+
+                    // SW0/1, LDO0/1/2/3 Level Text Create.
+                    x = sx + 100 + w;
+                    y = sy + (120 * n);
+                    $elem = $(document.createElementNS(xmlns, 'text'));
+                    $elem.attr({'x':x-20, 'y':y-7, 'class':`centerText SWLevel${n}`, 'fill':'blue', 'visibility':'hidden'}).text(`${AVin}V`);
+                    $elem.appendTo(svgTag);
+                    // LDO0/2 Level Text Create.
+                    $elem = $(document.createElementNS(xmlns, 'text'));
+                    $elem.attr({'x':x-20, 'y':y+30-7, 'id':'ldoLevel', 'class':`centerText LDOLevel${(n*2)}`, 'fill':'blue', 'visibility':'hidden'}).text(`${(Ldo02Level/1000).toFixed(2)}V`);
+                    $elem.appendTo(svgTag);
+                    // LDO1/3 Level Text Create.
+                    $elem = $(document.createElementNS(xmlns, 'text'));
+                    $elem.attr({'x':x-20, 'y':y+60-7, 'id':'ldoLevel', 'class':`centerText LDOLevel${(n*2)+1}`, 'fill':'blue', 'visibility':'hidden'}).text(`${(Ldo13Level/1000).toFixed(2)}V`);
+                    $elem.appendTo(svgTag);
+
+                    // DUT draw.
+                    x = x + 100;        // 10(sx) + 100 + 160(w) + 100;
+                    y = y - 40;
+//                    console.log(`4. sx = ${sx}, sy = ${sy}, x = ${x}, y = ${y}`);
+                    $elem = $(document.createElementNS(xmlns, 'rect'));
+                    $elem.attr({'x':x, 'y':y, 'rx':5, 'ry':5, 'width':80, 'height':100, 'class':'DUT'});
+                    $elem.appendTo(svgTag);
+                    $elem = $(document.createElementNS(xmlns, 'text'));
+//                    $elem.attr({'x':x+40, 'y':y+10, 'class':'centerText'}).text(`${nDUT+n}-DUT`);
+                    $elem.attr({'x':x+40, 'y':y+10, 'class':'dutText effect'}).text(`${nDut[n]}-DUT`);
+//                    $elem.attr({'x':x+40, 'y':y+10, 'class':'svgText color5'}).text(`${nDut[n]}-DUT`);
+                    $elem.appendTo(svgTag);
+
+                    $elem = $(document.createElementNS(xmlns, 'rect'));
+                    $elem.attr({'x':x, 'y':y+30, 'width':20, 'height':20, 'rx':5, 'ry':5, 'class':`DUT${n} EVC`});
+                    $elem.appendTo(svgTag);
+                    $elem = $(document.createElementNS(xmlns, 'text'));
+                    $elem.attr({'x':x+40, 'y':y+42, 'class':'centerText'}).text('EVC');
+                    $elem.appendTo(svgTag);
+
+                    $elem = $(document.createElementNS(xmlns, 'rect'));
+                    $elem.attr({'x':x, 'y':y+60, 'width':20, 'height':20, 'rx':5, 'ry':5, 'class':`DUT${n} VCCQ`});
+                    $elem.appendTo(svgTag);
+                    $elem = $(document.createElementNS(xmlns, 'text'));
+                    $elem.attr({'x':x+40, 'y':y+72, 'class':'centerText'}).text('VccQ');
+                    $elem.appendTo(svgTag);
+
+                    $elem = $(document.createElementNS(xmlns, "line"));
+                    $elem.attr({'x1':x-(40+(n*40)), 'y1':y+70, 'x2':x, 'y2':y+70, 'id':`line2${n}`, 'class':`DUT${n} VCCQ LINE`, 'stroke':'black', 'stroke-width':1, 'opacity':1, 'visibility':'visibility'});
+                    $elem.appendTo(svgTag);
+
+//                    console.log(`5. sx = ${sx}, sy = ${sy}, x = ${x}, y = ${y}`);
+                }
+
+                /*
+                // Common Function text & rect draw.
+//                sx = 145;
+//                sy = 325;
+//                for(var i=0; i<5; i++) {
+                sx = 155;
+                sy = 325;
+                for(var i=0; i<4; i++) {
+                    x = sx + (i * 20);
+                    y = sy;
+                    $elem = $(document.createElementNS(xmlns, 'text'));
+                    $elem.attr({'x':x+5, 'y':y, 'id':'ldoLevel', 'class':'smallText'}).text(`${FuncName[i]}`);
+                    $elem.appendTo(svgTag);
+
+                    $elem = $(document.createElementNS(xmlns, 'rect'));
+                    $elem.attr({'x':x, 'y':y+5, 'width':10, 'height':10, 'rx':1, 'ry':1, 'class':`Func${i+1} normalSVG`, 'fill':'transparent'});
+                    $elem.appendTo(svgTag);
+                }
+
+                // Flag(CLS, TSD150, TSD170) draw.
+                sx = 275;
+                sy = 300-2;
+                $elem = $(document.createElementNS(xmlns, 'rect'));
+                $elem.attr({'x':sx, 'y':sy, 'width':175, 'height':52, 'class':`FLAG`, 'fill':'transparent'});
+                $elem.appendTo(svgTag);
+                for(var i=0; i<3; i++) {
+                    x = sx + 15;
+                    y = sy + 17 + (i * 13);
+                    $elem = $(document.createElementNS(xmlns, 'text'));
+                    $elem.attr({'x':x, 'y':y, 'id':'ldoLevel', 'class':'smallText flagText'}).text(`${FlagName[i]}`);
+                    $elem.appendTo(svgTag);
+                }
+                for(var i=0; i<6; i++) {
+                    x = sx + 30 + (i * 25);
+                    y = sy + 7;
+                    $elem = $(document.createElementNS(xmlns, 'text'));
+                    $elem.attr({'x':x+5, 'y':y, 'id':'ldoLevel', 'class':'smallText flagText'}).text(`${ChannelName[i]}`);
+                    $elem.appendTo(svgTag);
+
+                    $elem = $(document.createElementNS(xmlns, 'rect'));
+                    $elem.attr({'x':x, 'y':y+5, 'width':10, 'height':10, 'id':`CLS${i}`, 'class':`FLAG`, 'fill':'transparent'});
+                    $elem.appendTo(svgTag);
+
+                    $elem = $(document.createElementNS(xmlns, 'rect'));
+                    $elem.attr({'x':x, 'y':y+18, 'width':10, 'height':10, 'id':`TSD5${i}`, 'class':`FLAG`, 'fill':'transparent'});
+                    $elem.appendTo(svgTag);
+
+                    $elem = $(document.createElementNS(xmlns, 'rect'));
+                    $elem.attr({'x':x, 'y':y+31, 'width':10, 'height':10, 'id':`TSD7${i}`, 'class':`FLAG`, 'fill':'transparent'});
+                    $elem.appendTo(svgTag);
+                }
+                */
+
+                var svgContainer = document.getElementById("svgContainer");
+                svgContainer.appendChild(svgTag);
+
+
+
+                $('.SW').attr('stroke', 'black').attr('stroke-width', 1);
+                $('circle.SW').attr('fill', 'transparent').attr('visibility', 'visible');
+                $('.EVC').attr('fill', 'transparent');
+                $('.VCCQ').attr('fill', 'transparent');
+
+
+                /*
+                $('.FLAG').attr('visibility', 'hidden');
+                $('.flagText').attr('visibility', 'hidden');
+
+                // Common Function Display
+                console.log(`Common = 0x${Common.toString(16)}`);
+                for(var i=1; i<6; i++) {
+                    if( Common & (1<<(6-i)) ) {
+//                        console.log(`i = ${i}`);
+                        $(`.Func${i}`).attr('fill', 'red');
+                    }
+                }
+                for(var i=0; i<6; i++) {
+                    if( CLSFlags & (1<<i) ) {
+                        $(`#CLS${5-i}`).attr('fill', 'Fuchsia');
+                    }
+                    if( TSD5Flags & (1<<i) ) {
+                        $(`#TSD5${5-i}`).attr('fill', 'blue');
+                    }
+                    if( TSD7Flags & (1<<i) ) {
+                        $(`#TSD7${5-i}`).attr('fill', 'red');
+                    }
+                }
+                */
+
+
+                if( Reject & (1<<5) ) {   // 1'st PMIC SWITCH Reject
+                    $('.PMIC1.SW').attr('stroke', 'gray');
+                    $('.PMIC1.SW.OFF').attr('stroke', 'gray');
+                } else {        // reject이 아닌 경우.
+                    if( OnOff & (1<<5) ) {       // 1'st PMIC Switch On.
+                        $('.PMIC1.SW').attr('stroke', 'blue').attr('stroke-width', 3);
+                        $('.PMIC1.SW.OFF').attr('visibility', 'hidden');
+                        $('.PMIC1.SW.ON').attr('visibility', 'visible');
+                        $('.DUT0.EVC').attr('fill', 'blue');
+                        $('.SWLevel0').attr('visibility', 'visible');
+                    } else {
+                        $('.PMIC1.SW.OFF').attr('visibility', 'visible');
+                        $('.PMIC1.SW.ON').attr('visibility', 'hidden');
+                    }
+                }
+
+                if( Reject & (1<<4) ) {   // 1'st PMIC LDO0 Reject
+                    $('.PMIC1.LDO1').attr('stroke', 'gray');
+                    $('.PMIC1.LDO1.OFF').attr('stroke', 'gray');
+                } else {        // reject이 아닌 경우.
+                    if( OnOff & (1<<4) ) {       // 1'st PMIC LDO#1 On.
+                        $('.PMIC1.LDO1').attr('stroke', 'blue').attr('stroke-width', 3);
+                        $('.PMIC1.LDO1.OFF').attr('visibility', 'hidden');
+                        $('.PMIC1.LDO1.ON').attr('visibility', 'visible');
+                        $('.DUT0.VCCQ').attr('fill', 'blue');
+                        $('.DUT0.VCCQ.LINE').attr('stroke', 'blue').attr('stroke-width', 3);
+                        $('.LDOLevel0').attr('visibility', 'visible');
+                    } else {
+                        $('.PMIC1.LDO1.OFF').attr('visibility', 'visible');
+                        $('.PMIC1.LDO1.ON').attr('visibility', 'hidden');
+                    }
+                }
+
+                if( Reject & (1<<3) ) {   // 1'st PMIC LDO1 Reject
+                    $('.PMIC1.LDO2').attr('stroke', 'gray');
+                    if( OnOff & (1<<4) ) $('.PMIC1.LDO1.LDO2').attr('stroke', 'blue');
+                    $('.PMIC1.LDO2.OFF').attr('stroke', 'gray');
+                } else {        // reject이 아닌 경우.
+                    if( OnOff & (1<<3) ) {       // 1'st PMIC LDO#2 On.
+                        $('.PMIC1.LDO2').attr('stroke', 'blue').attr('stroke-width', 3);
+                        $('.PMIC1.LDO2.OFF').attr('visibility', 'hidden');
+                        $('.PMIC1.LDO2.ON').attr('visibility', 'visible');
+                        $('.DUT1.VCCQ').attr('fill', 'blue');
+                        $('.DUT1.VCCQ.LINE').attr('stroke', 'blue').attr('stroke-width', 3);
+                        $('.LDOLevel1').attr('visibility', 'visible');
+                    } else {
+                        $('.PMIC1.LDO2.OFF').attr('visibility', 'visible');
+                        $('.PMIC1.LDO2.ON').attr('visibility', 'hidden');
+                    }
+                }
+
+                if( Reject & (1<<2) ) {   // 2'nd PMIC SWITCH Reject
+                    $('.PMIC2.SW').attr('stroke', 'gray');
+                    $('.PMIC2.SW.OFF').attr('stroke', 'gray');
+                } else {        // reject이 아닌 경우.
+                    if( OnOff & (1<<2) ) {       // 2'nd PMIC Switch On.
+                        $('.PMIC2.SW').attr('stroke', 'red').attr('stroke-width', 3);
+                        $('.PMIC2.SW.OFF').attr('visibility', 'hidden');
+                        $('.PMIC2.SW.ON').attr('visibility', 'visible');
+                        $('.DUT1.EVC').attr('fill', 'red');
+                        $('.SWLevel1').attr('visibility', 'visible');
+                    } else {
+                        $('.PMIC2.SW.OFF').attr('visibility', 'visible');
+                        $('.PMIC2.SW.ON').attr('visibility', 'hidden');
+                    }
+                }
+
+                if( Reject & (1<<1) ) {   // 2'nd PMIC LDO2 Reject
+                    $('.PMIC2.LDO1').attr('stroke', 'gray');
+                    $('.PMIC2.LDO1.OFF').attr('stroke', 'gray');
+                } else {        // reject이 아닌 경우.
+                    if( OnOff & (1<<1) ) {       // 2'nd PMIC LDO#1 On.
+                        $('.PMIC2.LDO1').attr('stroke', 'red').attr('stroke-width', 3);
+                        $('.PMIC2.LDO1.OFF').attr('visibility', 'hidden');
+                        $('.PMIC2.LDO1.ON').attr('visibility', 'visible');
+                        $('.DUT1.VCCQ').attr('fill', 'red');
+                        $('.DUT1.VCCQ.LINE').attr('stroke', 'red').attr('stroke-width', 3);
+                        $('.LDOLevel2').attr('visibility', 'visible');
+                    } else {
+                        $('.PMIC2.LDO1.OFF').attr('visibility', 'visible');
+                        $('.PMIC2.LDO1.ON').attr('visibility', 'hidden');
+                    }
+                }
+
+                if( Reject & (1<<0) ) {   // 2'nd PMIC LDO3 Reject
+                    $('.PMIC2.LDO2').attr('stroke', 'gray');
+                    if( OnOff & (1<<4) ) $('.PMIC2.LDO1.LDO2').attr('stroke', 'red');
+                    $('.PMIC2.LDO2.OFF').attr('stroke', 'gray');
+                } else {        // reject이 아닌 경우.
+                    if( OnOff & (1<<0) ) {       // 2'nd PMIC LDO#2 On.
+                        $('.PMIC2.LDO2').attr('stroke', 'red').attr('stroke-width', 3);
+                        $('.PMIC2.LDO2.OFF').attr('visibility', 'hidden');
+                        $('.PMIC2.LDO2.ON').attr('visibility', 'visible');
+                        $('.DUT0.VCCQ').attr('fill', 'red');
+                        $('.DUT0.VCCQ.LINE').attr('stroke', 'red').attr('stroke-width', 3);
+                        $('.LDOLevel3').attr('visibility', 'visible');
+                    } else {
+                        $('.PMIC2.LDO2.OFF').attr('visibility', 'visible');
+                        $('.PMIC2.LDO2.ON').attr('visibility', 'hidden');
+                    }
+                }
+
+                console.log(`CLS : 0x${Common.toString(16)}`);
+                if( Common & (1<<5) ) {       // Clipping Enable.
+                    console.log('clipping enable');
+                    $(`#PMIC${nChip}`).attr('stroke', 'Fuchsia').attr('stroke-width', '3');
+                }
+
+                // SVG영역에서 mouse pointer를 출력한다.
+                s1 = document.getElementById("ChipView");
+                s1.addEventListener('mousedown', e => {
+                    console.log("(" + e.offsetX + ", " + e.offsetY + ")");
+                }, false);
+
+            });
+
+
+
+            $(document).on('click', '#FPGAChip', function(e) {
+                console.log(`type = ${e.type}, target value = ${e.target.value}, ${$(this).data('val')}\n`);
+                $('.BankLine').css('visibility', 'visible');
+            });
+
+            function showPosition(event) {
+//                var x = event.clientX - 20;
+//                var y = event.clientY - 114;
+//                console.log(`X coords: ${x}, Y coords: ${y}`);
+            }
+
+            /*
+            var ReducePin = false;
+            function Test() {
+//                var x2;
+                ReducePin = !ReducePin;
+//                console.log(`ReducePin : ${ReducePin}`);
+                for(var n=0; n<2; n++) {
+                    x = 190;
+                    y = 120 * (n + 1);
+                    for(var i=0; i<3; i++) {
+                        if( i == 0 ) continue;
+                        if( n == 0 ) {
+                            $(`#line${n}${i}`).attr('x2', ReducePin ? x+(80-(10*i)) : x+(180-(40*i)));
+                            if( i == 2 ) {
+                                $(`#circle${n}${i}`).attr('cx', ReducePin ? x+60 : x+100);
+                                $(`#line1${n}${i}`).attr('x1', ReducePin ? x+60 : x+100).attr('x2', ReducePin ? x+60 : x+100);
+                            }
+                        } else {
+                            $(`#line${n}${i}`).attr('x2', ReducePin ? x+(50+(10*i)) : x+(60+(40*i)));
+                            if( i == 2 ) {
+                                $(`#circle${n}${i}`).attr('cx', ReducePin ? x+70 : x+140);
+                                $(`#line1${n}${i}`).attr('x1', ReducePin ? x+70 : x+140).attr('x2', ReducePin ? x+70 : x+140);
+                            }
+                        }
+                    }
+                    x = 370;
+                    $(`#line2${n}`).attr('x1', ReducePin ? x-(110+(n*10)) : x-(40+(n*40)));
+//                    x2 = $(`#line2${n}`).attr('x1');
+//                    console.log(`line2[${n}] x1 = ${x2}`);
+                }
+            }
+            */
+
+            function OnOff(chkbox) {
+                console.log(`run OnOff() : ${chkbox.value}`);
+                var select = parseInt(chkbox.value);
+                if( select == 0 ) {
+                    if( chkbox.checked == true ) {
+                        $('.PMIC1.SW').attr('stroke', 'blue').attr('stroke-width', 3);
+                        $('.PMIC1.SW.OFF').attr('visibility', 'hidden');
+                        $('.PMIC1.SW.ON').attr('visibility', 'visible');
+                        $('.DUT0.EVC').attr('fill', 'blue');
+                    } else {
+                        $('.PMIC1.SW').attr('stroke', 'black').attr('stroke-width', 1);
+                        $('.PMIC1.SW.OFF').attr('visibility', 'visible');
+                        $('.PMIC1.SW.ON').attr('visibility', 'hidden');
+                        $('.DUT0.EVC').attr('fill', 'transparent');
+                    }
+                } else if( select == 1 ) {
+                    if( chkbox.checked == true ) {
+                        $('.PMIC1.LDO1').attr('stroke', 'blue').attr('stroke-width', 3);
+                        $('.PMIC1.LDO1.OFF').attr('visibility', 'hidden');
+                        $('.PMIC1.LDO1.ON').attr('visibility', 'visible');
+                        $('.DUT0.VCCQ').attr('fill', 'blue');
+                        $('.DUT0.VCCQ.LINE').attr('stroke', 'blue').attr('stroke-width', 3);
+                    } else {
+                        $('.PMIC1.LDO1').attr('stroke', 'black').attr('stroke-width', 1);
+                        $('.PMIC1.LDO1.OFF').attr('visibility', 'visible');
+                        $('.PMIC1.LDO1.ON').attr('visibility', 'hidden');
+                        $('.DUT0.VCCQ').attr('fill', 'transparent');
+                        $('.DUT0.VCCQ.LINE').attr('stroke', 'black').attr('stroke-width', 1);
+                    }
+                } else if( select == 2 ) {
+                    if( chkbox.checked == true ) {
+                        $('.PMIC1.LDO2').attr('stroke', 'blue').attr('stroke-width', 3);
+                        $('.PMIC1.LDO2.OFF').attr('visibility', 'hidden');
+                        $('.PMIC1.LDO2.ON').attr('visibility', 'visible');
+                        $('.DUT1.VCCQ').attr('fill', 'blue');
+                        $('.DUT1.VCCQ.LINE').attr('stroke', 'blue').attr('stroke-width', 3);
+                    } else {
+                        $('.PMIC1.LDO2').attr('stroke', 'black').attr('stroke-width', 1);
+                        $('.PMIC1.LDO2.OFF').attr('visibility', 'visible');
+                        $('.PMIC1.LDO2.ON').attr('visibility', 'hidden');
+                        $('.DUT1.VCCQ').attr('fill', 'transparent');
+                        $('.DUT1.VCCQ.LINE').attr('stroke', 'black').attr('stroke-width', 1);
+                    }
+                } else if( select == 3 ) {
+                    if( chkbox.checked == true ) {
+                        $('.PMIC2.SW').attr('stroke', 'red').attr('stroke-width', 3);
+                        $('.PMIC2.SW.OFF').attr('visibility', 'hidden');
+                        $('.PMIC2.SW.ON').attr('visibility', 'visible');
+                        $('.DUT1.EVC').attr('fill', 'red');
+                        $('.DUT1.EVC.LINE').attr('stroke', 'blue').attr('stroke-width', 3);
+                    } else {
+                        $('.PMIC2.SW').attr('stroke', 'black').attr('stroke-width', 1);
+                        $('.PMIC2.SW.OFF').attr('visibility', 'visible');
+                        $('.PMIC2.SW.ON').attr('visibility', 'hidden');
+                        $('.DUT1.EVC').attr('fill', 'transparent');
+                        $('.DUT1.EVC.LINE').attr('stroke', 'black').attr('stroke-width', 1);
+                    }
+                } else if( select == 4 ) {
+                    if( chkbox.checked == true ) {
+                        $('.PMIC2.LDO1').attr('stroke', 'red').attr('stroke-width', 3);
+                        $('.PMIC2.LDO1.OFF').attr('visibility', 'hidden');
+                        $('.PMIC2.LDO1.ON').attr('visibility', 'visible');
+                        $('.DUT1.VCCQ').attr('fill', 'red');
+                        $('.DUT1.VCCQ.LINE').attr('stroke', 'red').attr('stroke-width', 3);
+                    } else {
+                        $('.PMIC2.LDO1').attr('stroke', 'black').attr('stroke-width', 1);
+                        $('.PMIC2.LDO1.OFF').attr('visibility', 'visible');
+                        $('.PMIC2.LDO1.ON').attr('visibility', 'hidden');
+                        $('.DUT1.VCCQ').attr('fill', 'transparent');
+                        $('.DUT1.VCCQ.LINE').attr('stroke', 'black').attr('stroke-width', 1);
+                    }
+                } else if( select == 5 ) {
+                    if( chkbox.checked == true ) {
+                        $('.PMIC2.LDO2').attr('stroke', 'red').attr('stroke-width', 3);
+                        $('.PMIC2.LDO2.OFF').attr('visibility', 'hidden');
+                        $('.PMIC2.LDO2.ON').attr('visibility', 'visible');
+                        $('.DUT0.VCCQ').attr('fill', 'red');
+                        $('.DUT0.VCCQ.LINE').attr('stroke', 'red').attr('stroke-width', 3);
+                    } else {
+                        $('.PMIC2.LDO2').attr('stroke', 'black').attr('stroke-width', 1);
+                        $('.PMIC2.LDO2.OFF').attr('visibility', 'visible');
+                        $('.PMIC2.LDO2.ON').attr('visibility', 'hidden');
+                        $('.DUT0.VCCQ').attr('fill', 'transparent');
+                        $('.DUT0.VCCQ.LINE').attr('stroke', 'black').attr('stroke-width', 1);
+                    }
+                } else if( select == 6 ) {
+                    if( chkbox.checked == true ) {
+                        $('.PMIC1.LDO2').attr('stroke', 'black').attr('stroke-width', 1);
+                        $('.PMIC1.LDO2.OFF').attr('visibility', 'visible');
+                        $('.PMIC1.LDO2.ON').attr('visibility', 'hidden');
+                        $('.DUT1.VCCQ').attr('fill', 'transparent');
+                        $('.DUT1.VCCQ.LINE').attr('stroke', 'black').attr('stroke-width', 1);
+                        $('.PMIC2.SW').attr('stroke', 'black').attr('stroke-width', 1);
+                        $('.PMIC2.SW.OFF').attr('visibility', 'visible');
+                        $('.PMIC2.SW.ON').attr('visibility', 'hidden');
+                        $('.DUT1.EVC').attr('fill', 'transparent');
+
+                        $('.PMIC2.LDO2').attr('stroke', 'red').attr('stroke-width', 3);
+                        $('.PMIC2.LDO2.OFF').attr('visibility', 'hidden');
+                        $('.PMIC2.LDO2.ON').attr('visibility', 'visible');
+                        $('.DUT0.VCCQ').attr('fill', 'red');
+                        $('.DUT0.VCCQ.LINE').attr('stroke', 'red').attr('stroke-width', 3);
+                        $('.PMIC1.SW').attr('stroke', 'blue').attr('stroke-width', 3);
+                        $('.PMIC1.SW.OFF').attr('visibility', 'hidden');
+                        $('.PMIC1.SW.ON').attr('visibility', 'visible');
+                        $('.DUT0.EVC').attr('fill', 'blue');
+                    }
+                } else if( select == 7 ) {
+                    if( chkbox.checked == true ) {
+                        $('.PMIC2.LDO2').attr('stroke', 'black').attr('stroke-width', 1);
+                        $('.PMIC2.LDO2.OFF').attr('visibility', 'visible');
+                        $('.PMIC2.LDO2.ON').attr('visibility', 'hidden');
+                        $('.DUT0.VCCQ').attr('fill', 'transparent');
+                        $('.DUT0.VCCQ.LINE').attr('stroke', 'black').attr('stroke-width', 1);
+                        $('.PMIC1.SW').attr('stroke', 'black').attr('stroke-width', 1);
+                        $('.PMIC1.SW.OFF').attr('visibility', 'visible');
+                        $('.PMIC1.SW.ON').attr('visibility', 'hidden');
+
+                        $('.DUT0.EVC').attr('fill', 'transparent');
+                        $('.PMIC1.LDO2').attr('stroke', 'blue').attr('stroke-width', 3);
+                        $('.PMIC1.LDO2.OFF').attr('visibility', 'hidden');
+                        $('.PMIC1.LDO2.ON').attr('visibility', 'visible');
+                        $('.DUT1.VCCQ').attr('fill', 'blue');
+                        $('.DUT1.VCCQ.LINE').attr('stroke', 'blue').attr('stroke-width', 3);
+                        $('.PMIC2.SW').attr('stroke', 'red').attr('stroke-width', 3);
+                        $('.PMIC2.SW.OFF').attr('visibility', 'hidden');
+                        $('.PMIC2.SW.ON').attr('visibility', 'visible');
+                        $('.DUT1.EVC').attr('fill', 'red');
+                    }
+                } else if( select == 8 ) {
+                    if( chkbox.checked == true ) {
+                        $('.PMIC1.SW').attr('stroke', 'black').attr('stroke-width', 1);
+                        $('.PMIC1.SW.OFF').attr('visibility', 'visible');
+                        $('.PMIC1.SW.ON').attr('visibility', 'hidden');
+                        $('.PMIC1.LDO1').attr('stroke', 'black').attr('stroke-width', 1);
+                        $('.PMIC1.LDO1.OFF').attr('visibility', 'visible');
+                        $('.PMIC1.LDO1.ON').attr('visibility', 'hidden');
+                        $('.PMIC1.LDO2').attr('stroke', 'black').attr('stroke-width', 1);
+                        $('.PMIC1.LDO2.OFF').attr('visibility', 'visible');
+                        $('.PMIC1.LDO2.ON').attr('visibility', 'hidden');
+                        $('.PMIC2.SW').attr('stroke', 'black').attr('stroke-width', 1);
+                        $('.PMIC2.SW.OFF').attr('visibility', 'visible');
+                        $('.PMIC2.SW.ON').attr('visibility', 'hidden');
+                        $('.PMIC2.LDO1').attr('stroke', 'black').attr('stroke-width', 1);
+                        $('.PMIC2.LDO1.OFF').attr('visibility', 'visible');
+                        $('.PMIC2.LDO1.ON').attr('visibility', 'hidden');
+                        $('.PMIC2.LDO2').attr('stroke', 'black').attr('stroke-width', 1);
+                        $('.PMIC2.LDO2.OFF').attr('visibility', 'visible');
+                        $('.PMIC2.LDO2.ON').attr('visibility', 'hidden');
+
+                        $('.DUT0.EVC').attr('fill', 'transparent');
+                        $('.DUT0.VCCQ').attr('fill', 'transparent');
+                        $('.DUT0.VCCQ.LINE').attr('stroke', 'black').attr('stroke-width', 1);
+                        $('.DUT1.EVC').attr('fill', 'transparent');
+                        $('.DUT1.VCCQ').attr('fill', 'transparent');
+                        $('.DUT1.VCCQ.LINE').attr('stroke', 'black').attr('stroke-width', 1);
+                    }
+                }
+            }
+
+/*
+            var SwitchMapWindow;
+            $(window).on('beforeunload', function() {
+                if( (SwitchMapWindow != undefined) || (SwitchMapWindow != NaN) )
+                    SwitchMapWindow.close();
+                console.log('beforeunload');
+                alert('lkkk');
+            });
+*/
+        </script>
+    </body>
+</html>
+
+

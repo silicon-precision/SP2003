@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!-- jquery Library -->
+        <!--
+        <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+        <script src="./jquery-3.4.1.min.js"></script>
+        -->
+        <link rel="stylesheet" href="styles/style.css">
+        <link rel="stylesheet" href="styles/button.css">
+    
+        <!--
+        <link rel="stylesheet" type="text/css" href="magic-input.min.css">
+        -->
+        <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+        <style>
+            rect.CHIP{
+                -webkit-filter: drop-shadow( 3px 3px 2px rgba(100, 0, 100, .7));
+                filter: drop-shadow( 3px 3px 2px rgba(100, 0, 100, .7));
+                /* Similar syntax to box-shadow */
+            }
+        </style>
+    </head>
+
+    <body>
+        <center>
+        <div id="project"></div>&emsp;
+        <label class="labeltext">
+            <input type="checkbox" id="SP2003Cmd" class="mgc mgc-success mgc-lg" />
+            <!--
+            <input type="checkbox" id="SP2003Cmd"/>
+            -->
+            view command
+        </label>
+
+        <div id="tooltip"></div>
+        <div id="svgContainer" name="container"></div>
+
+        <div id='CmdInput'>
+        <table border=0 align="center">
+            <tr>
+                <td>
+                    <fieldset id="CmdField">
+                        <!--
+                        <legend align="center"><b>SP2003 Command</b></legend>
+                        -->
+                        <legend align="center" class="labeltext">SP2003 Command</legend>
+                        <select id="SECCmd" name="COMMAND">
+                            <optgroup label="Samsung Command">
+                                <option value="" disabled selected hidden>Select Command</option>
+                                <option class="AllChip" value="0xA0">INIT(All OFF)</option>
+                                <option class="AllChip" value="0xA1">INIT(All ON)</option>
+                                <option class="AllChip" value="0xA2">CLS Enable</option>
+                                <option class="AllChip" value="0xA3">CLS Disable</option>
+                                <option class="AllChip" value="0xA4">All Chip Control</option>
+                                <option class="SingleChip" value="0xA5">Single Chip Control</option>
+                                <option class="SingleChip" value="0xA6">Single Chip Channel Control</option>
+                                <option class="SingleChip" value="0xA7">Single Dut Reject</option>
+                                <option class="MultiChip" value="0xA8">Multi Chip Control</option>
+                                <option class="AllChip" value="0xA9">LDO Data Set</option>
+                                <option class="AllChip" value="0xAF">Chip Address Assignment</option>
+                            </optgroup>
+                        </select>
+                    </fieldset>
+                </td>
+                <td>
+                    <div id="ChipField">
+                        <div align="center"><b>Group</b></div>
+                        <input type="number" id="ChipNo" min="0" class='select3' step='1' placeholder='Chip'>
+                    </div>
+                    <div id="MultiField">
+                        <div align="center"><b>Groups</b></div>
+                        <input id="HexInput" class='select3' placeholder='Hex Value'>
+                    </div>
+                </td>
+                <td>
+                    <div id="Ctrl1Field">
+                        <table border='0'>
+                            <tr align="center">
+                                <td><label class="channels">SW0/1</label></td>
+                                <td><label class="channels">LDO0/2</label></td>
+                                <td><label class="channels">LDO1/3</label></td>
+                            </tr>
+                            <tr align="center">
+                                <td><input type='checkbox' name='ctrl1' value='2'/></td>
+                                <td><input type='checkbox' name='ctrl1' value='1'/></td>
+                                <td><input type='checkbox' name='ctrl1' value='0'/></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div id="Ctrl2Field">
+                        <table border='0'>
+                            <tr align="center">
+                                <td><label class="channels">SW0</label></td>
+                                <td><label class="channels">LDO0</label></td>
+                                <td><label class="channels">LDO1</label></td>
+                                <td><label class="channels">SW1</label></td>
+                                <td><label class="channels">LDO2</label></td>
+                                <td><label class="channels">LDO3</label></td>
+                            </tr>
+                            <tr align="center">
+                                <td><input type='checkbox' name='ctrl2' value='6'/></td>
+                                <td><input type='checkbox' name='ctrl2' value='5'/></td>
+                                <td><input type='checkbox' name='ctrl2' value='4'/></td>
+                                <td><input type='checkbox' name='ctrl2' value='2'/></td>
+                                <td><input type='checkbox' name='ctrl2' value='1'/></td>
+                                <td><input type='checkbox' name='ctrl2' value='0'/></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div id="Ctrl3Field">
+                        <table border='0'>
+                            <tr align="center">
+                                <td><label class="channels">DUT0/1</label></td>
+                                <td><label class="channels">SW0/1</label></td>
+                                <td><label class="channels">LDO0/2</label></td>
+                                <td><label class="channels">LDO1/3</label></td>
+                            </tr>
+                            <tr align="center">
+                                <td><input type='checkbox' name='ctrl3' value='3'/></td>
+                                <td><input type='checkbox' name='ctrl3' value='2'/></td>
+                                <td><input type='checkbox' name='ctrl3' value='1'/></td>
+                                <td><input type='checkbox' name='ctrl3' value='0'/></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div id="DataField" align="center">
+                        <div align="center"><b>Data</b></div>
+                        <input id="DecInput" class='select3' placeholder='LDO Level'>
+                    </div>
+                    <div id="AddrField" align="center">
+                        <div align="center"><b>Select</b></div>
+                        <input id="AddrInput" class='select3' placeholder='Addr Level'>
+                    </div>
+                    <div id="CtrlField">
+                        <table border='0'>
+                            <tr align="center">
+                                <td><label class="channels">Enable</label></td>
+                                <td><label class="channels">Disable</label></td>
+                            </tr>
+                            <tr align="center">
+                                <td><input type='radio' name='Ctrl' value='1'/></td>
+                                <td><input type='radio' name='Ctrl' value='0'/></td>
+                            </tr>
+                        </table>
+                    </div>
+                </td>
+                <td>
+                    <button id='SendCommand' class='button green'>Send</button>
+                </td>
+            </tr>
+        </table>
+        </div>
+
+        <!--
+        <div id="tooltip" display='none' style='position:absolute; display:none;'></div>
+        -->
+        </center>
+
+		<script language="javascript">
+            var CmdList = new Array();
+            var CmdListWindow;
+            var ATECmd = [];
+            var SwitchMapWindow;
+            var DeviceID;
+            var startDut;
+            var endDut;
+            var ChipWindow;
+            var SP2003;
+
+            const xmlns = "http://www.w3.org/2000/svg";
+            // Default value
+            const CLSResetLevel = 0;
+            var DefaultLevel = 1200;        // LDO Default Set명령으로 변경되는 전압 값.
+
+            // LDO Level variable.
+            var DataLevel;                  // LDO Data Set명령으로 변경되는 전압 값.
+            var CurrentLevel;
+
+            var AVin;
+            var maxDUTs;
+            var maxGROUP;
+            var ChipsPerBank;
+            var DutsPerChip;
+            var nPPS;
+
+            var SelectedChip;
+            var SP2003List;
+            var TargetBankMap;
+
+
+            function getUrlParams() {
+                var params = {};
+                window.location.search.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(str, key, value) { params[key] = value; });
+                return params;
+            }
+
+            $(document).ready(function(){
+                // window width & height.
+                console.log(`Window position : (${window.screenX}, ${window.screenY}), size : ${window.innerWidth} x ${window.innerHeight}`);
+
+                // 부모 윈도우의 요소를 read한다.
+//                var site = opener.document.getElementById('siteNumber').value;
+
+                // 부모 윈도우의 변수를 참조한다.
+//                maxDUTs = opener.maxDUTs;
+//                device = parent.window.opener.device;
+
+                /*
+                // @ web server
+                console.log(`opener = ${opener}`);
+                iBank = (opener === null) ? 0 : opener.iBank;
+                maxDUTs = (opener === null) ? 2560 : opener.maxDUTs;
+                maxGROUP = (opener === null) ? 10 : opener.maxGROUP;
+                ChipsPerBank = (opener === null) ? 30 : opener.ChipsPerBank;
+                DutsPerChip = (opener === null) ? 2 : opener.DutsPerChip;
+                */
+
+                /*
+                if( typeof opener == 'object' ) {           // opener Object가 있는지 check한다.(크롬의 보안이 Disable되었는지 check한다.
+                    console.log(`opener = ${opener}`);
+                } else {
+                    console.log(`C:> "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" --disable-web-security`);
+                    console.log(`or`);
+                    console.log(`"Chrome.exe" -> "속성" -> "대상(T)" 항목에서 "-allow-file-access-from-files"를 추가하고, 크롬을 실행한다.`);
+                }
+                */
+
+                // @ web client
+                oParams = getUrlParams();
+                if( jQuery.isEmptyObject(oParams) ) {
+                    var BankMap;
+                    if( window.location.protocol === 'file:' ) {
+                        BankMap = JSON.parse(localStorage.getItem("BankMap"));
+                        SelectedChip = JSON.parse(localStorage.getItem("SelectedChip"));
+                        SP2003List = JSON.parse(localStorage.getItem("SP2003List"));
+                    } else {
+                        console.log('using opener');
+                        SelectedChip = (opener === null) ? 0 : opener.SelectedChip;
+
+                        // 선택된 Bank의 BankMap과 SP2003List를 받아온다.
+                        // Bank 구성 정보 : AVin, ChipsPerBank, device, maxDUTs, DutsPerChip, BankCnt, ...
+                        // BankMap Object
+                        BankMap = (opener === null) ? 0 : opener.BankMap;
+
+                        // SP2003List Array.
+                        SP2003List = (opener === null) ? 0 : opener.SP2003List;
+                    }
+                    console.log(`SelectedChip = ${JSON.stringify(SelectedChip)}`);
+                    console.log(`BankMap : ${JSON.stringify(BankMap)}`);
+                    console.log(`SP2003 : ${JSON.stringify(SP2003List)}`);
+
+                    AVin = parseFloat(BankMap.AVin);
+                    maxDUTs = BankMap.maxDUTs;
+                    maxGROUP = BankMap.maxGROUP;
+                    ChipsPerBank = BankMap.ChipsPerBank;
+                    DutsPerChip = BankMap.DutsPerChip;
+                    TargetBankMap = BankMap.Banks[SelectedChip.iBank];
+                    console.log(`BankMap[${SelectedChip.iBank}] : ${JSON.stringify(TargetBankMap)}`);
+
+                } else {
+                    console.log(`oParams = ${JSON.stringify(oParams)}`);
+//                    iBank = parseInt(oParams.BANK);
+                    maxDUTs = parseInt(oParams.maxDUTs);
+                    maxGROUP = parseInt(oParams.maxGROUP);              // 분기 정보를 나탸낸다.
+                    ChipsPerBank = parseInt(oParams.ChipsPerBank);
+                    DutsPerChip = parseInt(oParams.DutsPerChip);
+                }
+
+                console.log(`AVin = ${AVin}`);
+                console.log(`iBank = ${SelectedChip.iBank}, maxDUTs = ${maxDUTs}, maxGROUP = ${maxGROUP}, ChipsPerBank = ${ChipsPerBank}, DutsPerChip = ${DutsPerChip}`);
+
+                var maxChips = Math.ceil(maxDUTs / DutsPerChip);
+//                nPPS = ((SelectedChip.iBank * Math.ceil(ChipsPerBank / maxGROUP)) * DutsPerChip) + 1;    // ATE 신호선 : 1부터 시작한다.
+
+                nPPS = 1;
+                BankMap.Banks.some( function(Bank, BankIdx) {
+                    if( BankIdx < SelectedChip.iBank ) {
+                        nPPS += (Bank.PageCnt * DutsPerChip);
+//                        console.log(`bank = ${BankIdx}, pps = ${nPPS}`);
+                        return false;
+                    }
+//                    console.log(`bank = ${BankIdx}, pps = ${nPPS}`);
+                    return true;
+                });
+
+                console.log(`start Chip = ${TargetBankMap.Pages[0].Chips[0]}, maxGROUP = ${maxGROUP}, PPS = ${nPPS}`);
+
+                var PageCnt = TargetBankMap.PageCnt;
+                console.log(`Page count = ${PageCnt}`);
+
+
+
+                $('#project').text(`BANK[${SelectedChip.iBank}] Map`);
+
+                // SVG(Scalable Vector Graphics) 영역 생성하기.
+                var svgTag = document.createElementNS(xmlns, "svg");
+                svgTag.setAttributeNS(null, "id", "BankMap");
+                svgTag.setAttributeNS(null, "align", "center");
+                var w = (60 * maxGROUP) + 100;
+                var h = (120 * (PageCnt - 1)) + 100;  // 340
+                svgTag.setAttributeNS(null, "width", w.toString());
+                svgTag.setAttributeNS(null, "height", h.toString());
+                console.log(`SVG width(${svgTag.getAttribute('width')}), height(${svgTag.getAttribute('height')})`);
+
+                var $elem;
+
+                var sx = 10;
+                var sy = 40;
+                var x;
+                var y;
+                var dx;
+                var dy;
+                var w;
+                var h;
+
+                x = sx;
+                y = sy;
+
+                var pps = nPPS;
+                for(var page = 0; page < PageCnt; page++ ) {
+                    var log = `Page[${page}] : `;
+                    if( page == 0 ) {
+                        $elem = $(document.createElementNS(xmlns, 'text'));
+                        $elem.attr({'x':x+50, 'y':y-10, 'class':'svgText', 'fill':'green'}).text(`SCLK/SDO[${SelectedChip.iBank}]`);
+                        $elem.appendTo(svgTag);
+
+                        // SPI(SCLK/SDO) start line
+                        $elem = $(document.createElementNS(xmlns, "line"));
+                        $elem.attr({'x1':x, 'y1':y, 'x2':x+20, 'y2':y, 'stroke':'green', 'stroke-width':3, 'opacity':1});
+                        $elem.appendTo(svgTag);
+
+                    } else {
+                        // SPI line.
+                        $elem = $(document.createElementNS(xmlns, "line"));
+                        $elem.attr({'x1':x+20, 'y1':y-120, 'x2':x+20, 'y2':y, 'stroke':'green', 'stroke-width':3, 'opacity':1});
+                        $elem.appendTo(svgTag);
+                    }
+
+                    $elem = $(document.createElementNS(xmlns, "line"));
+                    $elem.attr({'x1':x+20, 'y1':y, 'x2':x+80, 'y2':y, 'stroke':'green', 'stroke-width':3, 'opacity':1});
+                    $elem.appendTo(svgTag);
+
+                    // CSN0 start line
+                    $elem = $(document.createElementNS(xmlns, 'text'));
+                    $elem.attr({'x':x+50, 'y':y+10, 'class':'CSNText', 'fill':'green'}).text(`CSN[${(SelectedChip.iBank*PageCnt)+page}]`);
+                    $elem.appendTo(svgTag);
+                    $elem = $(document.createElementNS(xmlns, "line"));
+                    $elem.attr({'x1':x+20, 'y1':y+15, 'x2':x+80, 'y2':y+15, 'stroke':'green', 'stroke-width':1, 'opacity':1});
+                    $elem.appendTo(svgTag);
+
+                    // 'red' PPS start line.
+                    $elem = $(document.createElementNS(xmlns, "line"));
+                    $elem.attr({'x1':x+30, 'y1':y+40, 'x2':x+50, 'y2':y+40, 'stroke':'blue', 'stroke-width':1, 'opacity':1});
+                    $elem.appendTo(svgTag);
+                    $elem = $(document.createElementNS(xmlns, 'text'));
+                    $elem.attr({'x':x+40, 'y':y+38, 'font-size':10, 'font-weight':'bold', 'fill':'blue'}).text(`PPS #[${pps}]`);
+                    $elem.appendTo(svgTag);
+
+                    pps++;
+                    // 'blue' PPS start line.
+                    $elem = $(document.createElementNS(xmlns, "line"));
+                    $elem.attr({'x1':x+30, 'y1':y+50, 'x2':x+70, 'y2':y+50, 'stroke':'red', 'stroke-width':1, 'opacity':1});
+                    $elem.appendTo(svgTag);
+                    $elem = $(document.createElementNS(xmlns, 'text'));
+                    $elem.attr({'x':x+40, 'y':y+48, 'font-size':10, 'font-weight':'bold', 'fill':'red'}).text(`PPS #[${pps}]`);
+                    $elem.appendTo(svgTag);
+                    pps++;
+
+//                    console.log(`x = ${x}, y = ${y}`);
+                    w = 40;
+                    h = 40;
+
+                    dx = 20;
+                    dy = 80;
+
+                    for(var grp=0; grp < maxGROUP; grp++) {
+                        var nChip = TargetBankMap.Pages[page].Chips[grp];
+                        var Reject = SP2003List[nChip - 1].Reject;
+                        var OnOff = SP2003List[nChip - 1].OnOff;
+//                        console.log(`chip = ${nChip}, OnOff = 0x${OnOff.toString(16)}, Reject = 0x${Reject.toString(16)}`);
+
+                        log += `${nChip} `;
+
+                        x = 110 + ((w+dx) * grp);
+                        y = 30 + (120 * page);
+                        $elem = $(document.createElementNS(xmlns, "line"));
+                        $elem.attr({'x1':x-20, 'y1':y+10, 'x2':x, 'y2':y+10, 'stroke':'green', 'stroke-width':3, 'opacity':1});
+                        $elem.appendTo(svgTag);
+
+                        $elem = $(document.createElementNS(xmlns, "line"));
+                        $elem.attr({'x1':x-20, 'y1':y+25, 'x2':x, 'y2':y+25, 'stroke':'green', 'stroke-width':1, 'opacity':1});
+                        $elem.appendTo(svgTag);
+
+                        /*
+                        $elem = $(document.createElementNS(xmlns, 'rect'));
+                        $elem.attr({'x':x, 'y':y, 'width':w, 'height':h, 'id':`CHIP${nChip}`, 'class':'CHIP', 'value':nChip.toString(), 'stroke':'black', 'stroke-width':1, 'fill':'cornflowerblue', 'onclick':'ChipClick($(this).attr("value"))'});
+                        $elem.appendTo(svgTag);
+                        */
+
+                        $elem = $(document.createElementNS(xmlns, 'text'));
+                        $elem.attr({'x':x+20, 'y':y+8, 'font-size':12, 'class':'CHIPText'}).text(`[${nChip}]`);
+//                        $elem.attr({'x':x+5, 'y':y+10, 'font-size':12, 'class':'CHIPText'}).text(`#${nChip}`);
+                        $elem.appendTo(svgTag);
+
+                        ///////
+                        $elem = $(document.createElementNS(xmlns, 'text'));
+                        $elem.attr({'x':x+3, 'y':y+20, 'font-size':8, 'font-weight':'bold'}).text("DUT");
+                        $elem.appendTo(svgTag);
+                        $elem = $(document.createElementNS(xmlns, "line"));
+                        $elem.attr({'x1':x+10, 'y1':y+37, 'x2':x+10, 'y2':y+50, 'stroke':'blue', 'stroke-width':1, 'opacity':1});
+                        $elem.appendTo(svgTag);
+                        $elem = $(document.createElementNS(xmlns, "line"));
+                        $elem.attr({'x1':x-50, 'y1':y+50, 'x2':x+10, 'y2':y+50, 'stroke':'blue', 'stroke-width':1, 'opacity':1});
+                        $elem.appendTo(svgTag);
+                        // reject X line
+                        $elem = $(document.createElementNS(xmlns, "line"));
+                        $elem.attr({'x1':x+3, 'y1':y+22, 'x2':x+18, 'y2':y+37, 'class':`RJT dut${nDut}`, 'visibility':'hidden'});
+                        $elem.appendTo(svgTag);
+                        $elem = $(document.createElementNS(xmlns, "line"));
+                        $elem.attr({'x1':x+3, 'y1':y+37, 'x2':x+18, 'y2':y+22, 'class':`RJT dut${nDut}`, 'visibility':'hidden'});
+                        $elem.appendTo(svgTag);
+                        // add 'red' pps line.(이전 Chip의 PPS line과 연결됨.)
+
+                        $elem = $(document.createElementNS(xmlns, 'text'));
+                        $elem.attr({'x':x+22, 'y':y+20, 'font-size':8, 'font-weight':'bold'}).text("DUT");
+                        $elem.appendTo(svgTag);
+                        $elem = $(document.createElementNS(xmlns, "line"));
+                        $elem.attr({'x1':x+29, 'y1':y+37, 'x2':x+29, 'y2':y+60, 'stroke':'red', 'stroke-width':1, 'opacity':1});
+                        $elem.appendTo(svgTag);
+                        $elem = $(document.createElementNS(xmlns, "line"));
+                        $elem.attr({'x1':x-30, 'y1':y+60, 'x2':x+30, 'y2':y+60, 'stroke':'red', 'stroke-width':1, 'opacity':1});
+                        $elem.appendTo(svgTag);
+
+                        // reject X line
+                        $elem = $(document.createElementNS(xmlns, "line"));
+                        $elem.attr({'x1':x+22, 'y1':y+22, 'x2':x+37, 'y2':y+37, 'class':`RJT dut${nDut}`, 'visibility':'hidden'});
+                        $elem.appendTo(svgTag);
+                        $elem = $(document.createElementNS(xmlns, "line"));
+                        $elem.attr({'x1':x+22, 'y1':y+37, 'x2':x+37, 'y2':y+22, 'class':`RJT dut${nDut}`, 'visibility':'hidden'});
+                        $elem.appendTo(svgTag);
+
+                        $elem = $(document.createElementNS(xmlns, 'rect'));
+//                        $elem.attr({'x':x, 'y':y, 'width':w, 'height':h, 'id':`CHIP${nChip}`, 'class':'CHIP', 'value':nChip.toString(), 'stroke':'black', 'stroke-width':1, 'fill':'transparent', 'onclick':'ChipClick($(this).attr("value"))'});
+                        $elem.attr({'x':x, 'y':y, 'rx':'2', 'ry':'2', 'width':w, 'height':h, 'id':`CHIP${nChip}`, 'class':'CHIP', 'value':nChip.toString(), 'stroke':'black', 'stroke-width':1, 'fill':'transparent', 'fill-opacity':'0.1', 'onclick':'ChipClick($(this).attr("value"))'});
+                        $elem.appendTo(svgTag);
+
+                        var color = ( Reject & 0x38 ) ? 'gray' : (( OnOff & 0x38 ) ? 'blue' : 'transparent');
+                        var nDut = TargetBankMap.Pages[page].Duts[(grp * 2) + 0];
+                        $elem = $(document.createElementNS(xmlns, 'rect'));
+                        $elem.attr({'id':`DutID${nDut}`, 'value':`${nDut}`,
+                            'x':x+3, 'y':y+22, 'rx':2, 'ry':2, 'width':15, 'height':15,
+                            'class':`GROUP GROUP${grp} bDUT`, 'fill':color,
+                            'onmouseover':'showTooltip(event)',
+                            'onmouseout':'hideTooltip(event)',
+                            'onclick':'DutClick($(this).attr("value"))'});
+                        $elem.appendTo(svgTag);
+
+                        color = ( Reject & 0x07 ) ? 'gray' : (( OnOff & 0x7 ) ? 'red' : 'transparent');
+                        nDut = TargetBankMap.Pages[page].Duts[(grp * 2) + 1];
+                        $elem = $(document.createElementNS(xmlns, 'rect'));
+                        $elem.attr({'id':`DutID${nDut}`, 'value':`${nDut}`,
+                            'x':x+22, 'y':y+22, 'rx':2, 'ry':2, 'width':15, 'height':15,
+                            'class':`GROUP GROUP${grp} rDUT`, 'fill':color,
+                            'onmouseover':'showTooltip(event)',
+                            'onmouseout':'hideTooltip(event)',
+                            'onclick':'DutClick($(this).attr("value"))'});
+                        $elem.appendTo(svgTag);
+                        // add 'blue' pps line.(이전 Chip의 PPS line과 연결됨.)
+
+//                        $elem = $(document.createElementNS(xmlns, 'rect'));
+//                        $elem.attr({'x':x, 'y':y, 'width':w, 'height':h, 'id':`CHIP${nChip}`, 'class':'CHIP', 'value':nChip.toString(), 'stroke':'black', 'stroke-width':1, 'fill':'transparent', 'onclick':'ChipClick($(this).attr("value"))'});
+//                        $elem.appendTo(svgTag);
+                    }
+//                    console.log(log);
+
+                    y = sy + (120 * (page + 1));
+                    x = sx;
+                }
+
+                var svgContainer = document.getElementById("svgContainer");
+                svgContainer.appendChild(svgTag);
+
+                // 모든 dut의 rect 색상을 제거한다.
+//                $('.GROUP').attr('fill', 'transparent');
+
+
+                // Init(All OFF) command.
+                DataLevel = DefaultLevel;
+                CurrentLevel = DataLevel;
+
+                /*
+                AVin = parseFloat($('#Vin').val());
+                $('#DecInput').attr('max', (AVin-0.01).toString());
+                */
+
+                ChipClick(SelectedChip.nChip);
+                // Bank를 클릭하면, 자동으로 Address Assignment가 실행된다.
+//                $('#SECCmd option[value="0xAF"').prop('selected', true);
+//                $('#AddrField').css('display', 'block');
+//                $('#AddrInput').val('0xFFFF');
+//                $('#SendCommand').click();
+            });
+
+
+            $('#SP2003Cmd:checkbox').change(function() {
+                $('#CmdInput').css('visibility', this.checked ? 'visible' : 'hidden');
+            });
+            function showTooltip(event) {
+                var width = document.getElementById("BankMap").getAttribute('width');
+//                console.log(`width = ${width}`);
+                let tooltip = document.getElementById('tooltip');
+                tooltip.innerHTML = event.target.getAttribute('value');
+                tooltip.style.display = 'block';
+                if( (event.pageX + 40) > width ) {
+                    tooltip.style.left = (event.pageX - 50) + 'px';
+                } else {
+                    tooltip.style.left = (event.pageX + 10) + 'px';
+                }
+                tooltip.style.top = (event.pageY - 20) + 'px';
+//                console.log(`value = ${event.target.getAttribute('value')}, width = ${width}, mouse enter event x = ${event.pageX}, y = ${event.pageY}\n`);
+            }
+
+            function hideTooltip(event) {
+                let tooltip = document.getElementById('tooltip');
+                tooltip.style.display = 'none';
+//                console.log(`mouse out event x = ${event.pageX}, y = ${event.pageY}\n`);
+            }
+
+            // CommandList.html을 실행하고, CommandList를 받아온다.
+            function displayCmdList() {
+                console.log(`CmdList(${CmdList.length}) : ` + toHexByteString(CmdList));
+            }
+
+            function openCommandList() {
+//                window.open('CommandList.html', "Command List Window", 'target=_blank, width=800, height=420');
+                console.log(`Screen : width = ${window.screen.width}, height = ${window.screen.height}`);
+                console.log(`Window position : (${window.screenX}, ${window.screenY}), width(${window.innerWidth}), height(${window.innerHeight})`);
+                var url = 'CommandList.html';
+                url += `?maxGROUP=${maxGROUP}`;
+
+                var width = 800;
+                var height = 420;//430;
+
+                var startX = 0;
+                var startY = 0;
+                if( window.screenX > window.screen.width ) startX = window.screen.width;
+                if( window.screenY > window.screen.height ) startY = window.screen.height;
+
+                // 화면 중앙에 CardMap.html 파일을 출력한다.
+                var left = ((window.screen.width - width) / 2) + startX;
+                var top = ((window.screen.height - height) / 2) + startY;
+
+                console.log(`top = ${top}, left = ${left}`);
+                // 자식 창을 open한다.
+                var opt = `toolbar=no, menubar=no, location=no, status=no, target=_blank`;
+                opt += `, width=${width}, height=${height}, top=${top}, left=${left}`;
+                CmdListWindow = window.open(url, 'Command List Window', opt);
+            }
+
+            function toHexString(arr) {
+                return arr.map(function(val) {
+                    return '0x' + val.toString(16).toUpperCase();
+                }).join(' ');
+            }
+
+            function toHexByteString(bytes) {
+                return bytes.map(function(byte) {
+                    return '0x' + ('0' + (byte & 0xFF).toString(16).toUpperCase()).slice(-2);
+                }).join(' ')
+            }
+
+            function ExecuteEmulator(bytes) {
+                var end = bytes.length;
+                var idx = 0;
+                var cmd;// = bytes[idx++];
+
+                do {
+                    cmd = bytes[idx++];
+
+                    // 명령이 실행된 Chip과 실행되지 않는 Chip의 색을 변경한다.
+//                        $elem.attr({'x':x, 'y':y, 'rx':'2', 'ry':'2', 'width':w, 'height':h, 'id':`CHIP${nChip}`, 'class':'CHIP', 'value':nChip.toString(), 'stroke':'black', 'stroke-width':1, 'fill':'transparent', 'fill-opacity':'0.1', 'onclick':'ChipClick($(this).attr("value"))'});
+                    if ( cmd != 0xA7 ) {
+                        $('.CHIP').attr('fill', 'transparent');
+                    } else {
+                        $('.CHIP').attr('fill', 'blue');
+                    }
+
+                    if( cmd == 0xA0 ) {             // All Chip OFF
+                        SP2003List.forEach(function(chip, idx, arr) {
+                            chip.OnOff = 0;
+                            chip.Reject = 0;
+                        });
+                    } else if( cmd == 0xA1 ) {
+                        SP2003List.forEach(function(chip, idx, arr) {
+                            // SW0(bit[5]), LDO0(bit[4]), LDO1(bit[3]), SW1(bit[2]), LDO2(bit[1]), LDO3(bit[0])
+                            chip.OnOff = (1<<5)|(1<<4)|(1<<2)|(1<<1);
+                            chip.Reject = 0;
+                        });
+                    } else if( cmd == 0xA2 ) {
+                        SP2003List.forEach(function(chip, idx, arr) {
+                            // CLS(bit[5]), AD(bit[4]), RCB(bit[3]), FB(bit[2]), TSD(bit[1])
+                            chip.COMMON |= (1<<5);
+                        });
+                    } else if( cmd == 0xA3 ) {
+                        SP2003List.forEach(function(chip, idx, arr) {
+                            // CLS(bit[5]), AD(bit[4]), RCB(bit[3]), FB(bit[2]), TSD(bit[1])
+                            chip.COMMON &= ~(1<<5);
+                        });
+                    } else if( cmd == 0xA4 ) {
+                        var ctrl = bytes[idx++] >> 4;
+                        SP2003List.forEach(function(chip, idx, arr) {
+                            // SW0(bit[5]), LDO0(bit[4]), LDO1(bit[3]), SW1(bit[2]), LDO2(bit[1]), LDO3(bit[0])
+                            var onoff = (ctrl << 3) | ctrl;
+                            chip.OnOff = onoff & ~chip.Reject;
+
+                            if( chip.OnOff & 0x38 ) {   // SW0, LDO0, LDO1 중에 ON된 Channel이 있는 경우.
+                                $(`#DutID${(idx*2)}`).attr('fill', 'blue');
+                            }
+                            if( chip.OnOff & 0x07 ) {   // SW1, LDO2, LDO3 중에 ON된 Channel이 있는 경우.
+                                $(`#DutID${(idx*2)+1}`).attr('fill', 'red');
+                            }
+                        });
+                    } else if( cmd == 0xA5 ) {
+                        var group = bytes[idx] >> 4;
+                        var ctrl = bytes[idx++] & 0xF;
+                        SP2003List.forEach(function(chip, idx, arr) {
+                            if( group == chip.Addr ) { 
+                                SelectedChip.nChip = group;
+                                $(`#DutID${(idx*2)}`).attr('fill', 'blue');
+                                $(`#DutID${(idx*2)+1}`).attr('fill', 'red');
+
+                                // SW0(bit[5]), LDO0(bit[4]), LDO1(bit[3]), SW1(bit[2]), LDO2(bit[1]), LDO3(bit[0])
+                                var onoff = (ctrl << 3) | ctrl;
+                                chip.OnOff = onoff & ~chip.Reject;
+                            } else {
+                                chip.OnOff = 0;
+                            }
+                        });
+                    } else if( cmd == 0xA6 ) {
+                        var num = bytes[idx] >> 4;
+                        var ctrl = ((bytes[idx++] & 0xF) << 3);
+                        ctrl = ctrl | ((bytes[idx++] & 0xF0) >> 4);
+                        SP2003List.forEach(function(chip, idx, arr) {
+                            if( num == chip.Addr ) { 
+                                SelectedChip.nChip = num;
+                                $(`#DutID${(idx*2)}`).attr('fill', 'blue');
+                                $(`#DutID${(idx*2)+1}`).attr('fill', 'red');
+
+                                // SW0(bit[5]), LDO0(bit[4]), LDO1(bit[3]), SW1(bit[2]), LDO2(bit[1]), LDO3(bit[0])
+                                chip.OnOff = ctrl & ~chip.Reject;
+                            } else {
+                                chip.OnOff = 0;
+                            }
+                        });
+                    } else if( cmd == 0xA7 ) {
+                        var num = bytes[idx] >> 4;
+                        var ctrl = bytes[idx++] & 0xF;
+                        SP2003List.forEach(function(chip, idx, arr) {
+                            if( chip.Assign == 0 ) return;
+                            if( num == chip.Addr ) { 
+                                SelectedChip.nChip = num;
+                                $(`#DutID${(idx*2)}`).attr('fill', 'blue');
+                                $(`#DutID${(idx*2)+1}`).attr('fill', 'red');
+
+                                // SW0(bit[5]), LDO0(bit[4]), LDO1(bit[3]), SW1(bit[2]), LDO2(bit[1]), LDO3(bit[0])
+                                if( ctrl & (1<<3) ) {       // 2'nd PMIC
+                                    chip.Reject |= (ctrl & 0x7);
+                                } else {                    // 1'st PMIC
+                                    chip.Reject |= ((ctrl & 0x7) << 3);
+                                }
+                                chip.OnOff &= ~chip.Reject;
+//                            } else {
+                            }
+                        });
+                    } else if( cmd == 0xA8 ) {
+                        var select = (bytes[idx++] << 8);
+                        select = select | bytes[idx++];
+                        var ctrl = (bytes[idx++] >> 4) & 0x7;
+                        SP2003List.forEach(function(chip, idx, arr) {
+                            if( chip.Assign == 0 ) return;
+                            if( select & (1<<(15-chip.Addr)) ) { 
+                                SelectedChip.nChip = chip.Addr;
+                                $(`#DutID${(idx*2)}`).attr('fill', 'blue');
+                                $(`#DutID${(idx*2)+1}`).attr('fill', 'red');
+
+                                // SW0(bit[5]), LDO0(bit[4]), LDO1(bit[3]), SW1(bit[2]), LDO2(bit[1]), LDO3(bit[0])
+                                var onoff = (ctrl << 3) | ctrl;
+                                chip.OnOff = onoff & ~chip.Reject;
+                            } else {
+                                chip.OnOff = 0;
+                            }
+                        });
+                    } else if( cmd == 0xA9 ) {
+                        var level = (bytes[idx++] << 4);
+                        level = level | (bytes[idx++] >> 4);
+                        SP2003List.forEach(function(chip, idx, arr) {
+                            chip.LDO02Level = level;
+                            chip.LDO13Level = level;
+                        });
+                    } else if( cmd == 0xAE ) {
+                        var ctrl = (bytes[idx++] >> 4) & 0xF;
+
+                        SP2003List.forEach(function(chip, idx, arr) {
+                            chip.ExpandCommand = ctrl;
+                        });
+                    } else if( cmd == 0xAF ) {
+                        var select = (bytes[idx++] << 8);
+                        select = select | bytes[idx++];
+                        SP2003List.forEach(function(chip, idx, arr) {
+                            if( select & (1<<(15-(idx % maxGROUP))) ) {
+                                chip.Assign = 1;
+                                chip.Addr = (idx % maxGROUP);
+                            }
+                        });
+                    }
+                    console.log(`idx = ${idx}, end = ${end}`);
+
+                } while( end != idx );
+
+                for(var page=0; page < TargetBankMap.PageCnt; page++) {
+                    for(var grp=0; grp < maxGROUP; grp++) {
+                        var nChip = TargetBankMap.Pages[page].Chips[grp];
+                        var Reject = SP2003List[nChip - 1].Reject;
+                        var OnOff = SP2003List[nChip - 1].OnOff;
+
+                        var color = ( Reject & 0x38 ) ? 'gray' : (( OnOff & 0x38 ) ? 'blue' : 'transparent');
+                        var nDut = TargetBankMap.Pages[page].Duts[(grp * 2) + 0];
+                        $(`#DutID${nDut}`).attr('fill', color);
+
+                        /*
+                        $elem.attr({'id':`DutID${nDut}`, 'value':`${nDut}`,
+                            'x':x+3, 'y':y+22, 'rx':2, 'ry':2, 'width':15, 'height':15,
+                            'class':`GROUP GROUP${grp} bDUT`, 'fill':color,
+                            'onmouseover':'showTooltip(event)',
+                            'onmouseout':'hideTooltip(event)',
+                            'onclick':'DutClick($(this).attr("value"))'});
+                        */
+
+                        color = ( Reject & 0x07 ) ? 'gray' : (( OnOff & 0x7 ) ? 'red' : 'transparent');
+                        nDut = TargetBankMap.Pages[page].Duts[(grp * 2) + 1];
+                        $(`#DutID${nDut}`).attr('fill', color);
+                        /*
+                        $elem.attr({'id':`DutID${nDut}`, 'value':`${nDut}`,
+                            'x':x+22, 'y':y+22, 'rx':2, 'ry':2, 'width':15, 'height':15,
+                            'class':`GROUP GROUP${grp} rDUT`, 'fill':color,
+                            'onmouseover':'showTooltip(event)',
+                            'onmouseout':'hideTooltip(event)',
+                            'onclick':'DutClick($(this).attr("value"))'});
+                        */
+                    }
+                }
+                /*
+   //                         'class':`GROUP GROUP${grp} bDUT`, 'fill':color,
+                SP2003List.forEach(function(chip, idx, arr) {
+                    console.log(`idx = ${idx}`);
+                    // SW0(bit[5]), LDO0(bit[4]), LDO1(bit[3]), SW1(bit[2]), LDO2(bit[1]), LDO3(bit[0])
+                    if( chip.OnOff & 0x38 ) {   // SW0, LDO0, LDO1 중에 ON된 Channel이 있는 경우.
+                        $(`#DutID${(idx*2)}`).attr('fill', 'blue');
+                    }
+//                    if( chip.OnOff & 0x07 ) {   // SW1, LDO2, LDO3 중에 ON된 Channel이 있는 경우.
+//                        $(`#DutID${(idx*2)+1}`).attr('fill', 'red');
+//                    }
+                });
+                */
+            }
+
+            function SamsungCommandParser(cmd) {
+                var bytes = [];
+
+                bytes.push(cmd);
+                if( cmd == 0xA0 ) {
+                } else if( cmd == 0xA1 ) {
+                } else if( cmd == 0xA2 ) {
+                } else if( cmd == 0xA3 ) {
+                } else if( cmd == 0xA4 ) {
+                    $('input:checkbox[name="ctrl1"]').each(function() {
+                        if( this.checked ) ctrl |= (1 << parseInt(this.value));
+                    });
+                    bytes.push(ctrl<<4);
+                } else if( cmd == 0xA5 ) {
+                    chip = parseInt($('#ChipNo').val());
+                    $('input:checkbox[name="ctrl1"]').each(function() {
+                        if( this.checked ) ctrl |= (1 << parseInt(this.value));
+                    });
+                    bytes.push((chip<<4)|ctrl);
+                } else if( cmd == 0xA6 ) {
+                    chip = parseInt($('#ChipNo').val());
+                    $('input:checkbox[name="ctrl2"]').each(function() {
+                        if( this.checked ) ctrl |= (1 << parseInt(this.value));
+                    });
+                    bytes.push((chip<<4)|(ctrl>>4));
+                    bytes.push((ctrl & 0x0F) << 4);
+                } else if( cmd == 0xA7 ) {
+                    chip = parseInt($('#ChipNo').val());
+                    $('input:checkbox[name="ctrl3"]').each(function() {
+                        if( this.checked ) ctrl |= (1 << parseInt(this.value));
+                    });
+                    bytes.push((chip<<4)|ctrl);
+                } else if( cmd == 0xA8 ) {
+                    chip = parseInt($('#HexInput').val(), 16);
+                    $('input:checkbox[name="ctrl1"]').each(function() {
+                        if( this.checked ) ctrl |= (1 << parseInt(this.value));
+                    });
+                    bytes.push((chip>>8) & 0xFF);
+                    bytes.push(chip & 0xFF);
+                    bytes.push(ctrl<<4);
+                } else if( cmd == 0xA9 ) {
+                    var level = parseInt($('#DecInput').val());
+                    bytes.push(level>>4);
+                    bytes.push((level & 0xF)<<4);
+                } else if( cmd == 0xAE ) {
+                    $('input:radio[name="Ctrl"]').each(function() {
+                        if( this.checked ) ctrl = parseInt(this.value);
+                    });
+                    bytes.push(ctrl<<4);
+                } else if( cmd == 0xAF ) {
+                    var select = parseInt($('#AddrInput').val());
+                    bytes.push(select>>8);
+                    bytes.push(select & 0xFF);
+                }
+
+                return bytes;
+            }
+
+            // ATE Command to PS2003 bytes command.
+            function ATECommandParser(ATE)
+            {
+                var cmd = ATE[0];
+                var chip;
+                var ctrl;
+                var bytes = [];
+
+                console.log(`ATE Command : ` + toHexString(ATE));//0x${cmd.toString(16)}`);
+                if( cmd == 0x01 ) {             // Init(All On)
+                    CurrentLevel = DefaultLevel;
+                    bytes.push(0xA9);
+                    bytes.push(CurrentLevel >> 4);
+                    bytes.push((CurrentLevel << 4) & 0xF0);
+                    bytes.push(0xA1);
+                } else if( cmd == 0x02 ) {      // Init(All Off)
+                    CurrentLevel = DefaultLevel;
+                    bytes.push(0xA0);
+                    bytes.push(0xA9);
+                    bytes.push(CurrentLevel >> 4);
+                    bytes.push((CurrentLevel << 4) & 0xF0);
+                } else if( cmd == 0x03 ) {      // Clipping Disable
+                    bytes.push(0xA3);
+                } else if( cmd == 0x04 ) {      // Clipping Enable
+                    bytes.push(0xA2);
+                } else if( cmd == 0x11 ) {      // All CMD 1D Rjt
+                    var dut = ATE[1] % (maxGROUP << 1);
+                    bytes.push(0xA7);
+                    bytes.push((dut << 3) | 0x7);
+                } else if( cmd == 0x99 ) {      // OPEN CMD
+                } else if( cmd == 0xAA ) {      // CLOSE CMD
+                } else if( cmd == 0xB1 ) {      // 1D Rjt(PWR1 On)
+                    var dut = ATE[1] % (maxGROUP << 1);
+                    bytes.push(0xA7);
+                    bytes.push((dut << 3) | 0x1);
+                    bytes.push(0xA4);
+                    bytes.push(0x60);
+                } else if( cmd == 0xB2 ) {      // new DC Grp
+                    if( maxGROUP < 10 ) return;
+                    var m = (maxGROUP + 2) + (maxGROUP >> 1);
+                    var newGroup = ATE[1] + 16;
+                    var select;
+
+                    bytes.push(0xA8);
+                    if( newGroup == maxGROUP ) {
+                        select = 0xFF00;
+                    } else if( newGroup == (maxGROUP+1) ) {
+                        select = 0x00FF;
+                    } else {
+                        var shift = newGroup - (maxGROUP + 2);
+                        select = 0xC000 >> (shift * 2);
+                    }
+                    bytes.push(select >> 8);
+                    bytes.push(select & 0xFF);
+                    bytes.push(0x60);
+                } else if( cmd == 0xB4 ) {      // new ICC/ICCQ
+                    var newGroup = ATE[1] + 16;
+                    bytes.push(0xA6);
+                    if( (newGroup & 0x1) == 0 ) {
+                        bytes.push((newGroup << 3) | 0x01);
+                        bytes.push(0x40);
+                    } else {
+                        bytes.push((newGroup << 3) | 0x04);
+                        bytes.push(0x10);
+                    }
+                } else if( cmd == 0xD2 ) {      // All Grp ON(LDO)
+                    bytes.push(0xA9);
+                    bytes.push(CurrentLevel >> 4);
+                    bytes.push((CurrentLevel << 4) & 0xF0);
+                    bytes.push(0xA4);
+                    bytes.push(0x60);
+                } else if( cmd == 0xD4 ) {      // All Grp On(LDO)
+                    bytes.push(0xA9);
+                    bytes.push(DefaultLevel >> 4);
+                    bytes.push((DefaultLevel << 4) & 0xF0);
+                    bytes.push(0xA4);
+                    bytes.push(0x60);
+                } else if( cmd == 0xDC ) {      // All Grp Off(LDO)
+                    bytes.push(0xA4);
+                    bytes.push(0x00);
+                    bytes.push(0xA9);
+                    bytes.push(CurrentLevel >> 4);
+                    bytes.push((CurrentLevel << 4) & 0xF0);
+                } else if( cmd == 0xE0 ) {      // PMIC Default Set
+                    DefaultLevel = ATE[1];
+                } else if( cmd == 0xE1 ) {      // PMIC Data Set
+                    CurrentLevel = ATE[1];
+                } else if( cmd == 0xE2 ) {      // PMIC Max Set
+                    MaxLevel = ATE[1];
+                } else {
+                    var group = cmd & 0x0F;
+                    cmd = cmd & 0xF0;
+                    if( cmd == 0x20 ) {         // DC Grp.
+                        if( group < maxGROUP ) {
+                            bytes.push(0xA5);
+                            bytes.push((group<<4)|0x06);
+                        } else {
+                            var select = 0;
+                            bytes.push(0xA8);
+                            if( group == maxGROUP ) {
+                                for(var i=0; i<(maxGROUP >> 1); i++) {
+                                    select |= (1<<(15-i));
+                                }
+                            } else if( group == (maxGROUP+1) ) {
+                                for(var i=(maxGROUP>>1); i<maxGROUP; i++) {
+                                    select |= (1<<(15-i));
+                                }
+                            } else if( group < ((maxGROUP+2) + (maxGROUP >> 1)) ) {
+                                var i = (group - (maxGROUP + 2)) << 1;
+                                select = (0xC000 >> i);
+                            }
+                            bytes.push((select >> 8) & 0xFF);
+                            bytes.push(select & 0xFF);
+                            bytes.push(60);
+                        }
+                    } else if( cmd == 0x30 ) {  // ICC/ICCQ
+                        var chip = group >> 1;
+                        bytes.push(0xA6);
+                        if( (group & 0x1) == 0 ) {
+                            bytes.push((chip << 4) | 0x04);
+                            bytes.push(0x10);
+                        } else {
+                            bytes.push((chip << 4) | 0x01);
+                            bytes.push(0x40);
+                        }
+                    } else if( cmd == 0x40 ) {  // AC Grp(LDO).
+                        bytes.push(0xA9);
+                        bytes.push(CurrentLevel >> 4);
+                        bytes.push((CurrentLevel << 4) & 0xF0);
+                        bytes.push(0xA4);
+                        bytes.push(0x60);
+                    } else if( (cmd == 0x50) || (cmd == 0x60) || (cmd == 0x70) ) {  // Data In.
+                    } else if( cmd == 0x80 ) {  // Incoming Bypass Grp.
+                        bytes.push(0xA5);
+                        bytes.push((group << 4) | 0x4);
+                    } else if( cmd == 0xC0 ) {  // Incoming LDO Grp.
+                        bytes.push(0xA5);
+                        bytes.push((group << 4) | 0x2);
+                    }
+                }
+
+                console.log(`Tx(${bytes.length}) : ` + toHexByteString(bytes));
+
+                return bytes;
+            }
+
+            $(document).on('click', '#SendCommand', function(e) {
+                var cmd = parseInt($('#SECCmd').val());
+//                if( isNaN(cmd) ) return;
+                console.log(`cmd = 0x${cmd.toString(16)}`);
+
+                var bytes = [];
+
+                ATECmd = [];
+                if( (cmd & 0xF0) == 0xA0 ) {    // Samsung Command Parse.
+                    bytes.push(cmd);
+                    /*
+                    if( (cmd == 0xAF) || (cmd == 0xAE) ) {
+                        ATECmd.push(cmd);
+                        if( cmd == 0xAE ) {
+                            var ctrl;
+                            $('input:radio[name="Ctrl"]').each(function() {
+                                if( this.checked ) ctrl = parseInt(this.value);
+                            });
+                            ATECmd.push(ctrl<<4);
+                        } else if( cmd == 0xAF ) {
+                            var select = parseInt($('#AddrInput').val());
+                            ATECmd.push(select);
+                        }
+                    }
+                    */
+                    bytes = SamsungCommandParser(cmd);
+                } else {                        // ATE Command Parse
+                    var chip = 0;
+                    if( (cmd == 0x20) || (cmd == 0x30) || (cmd == 0x40) || (cmd == 0x80) || (cmd == 0xC0) ) {
+                        chip = parseInt($('#ChipNo').val());
+                        if( isNaN(chip) ) chip = 0;
+                        ATECmd.push(cmd | chip);
+                    } else if( (cmd == 0xB2) || (cmd == 0xB4) ) {   // new DC Grp, new ICC/ICCQ
+                        chip = parseInt($('#ChipNo').val());
+                        if( isNaN(chip) ) chip = 0;
+                        ATECmd.push(cmd);
+                        ATECmd.push(chip);
+                    } else if( (cmd == 0x11) || (cmd == 0xB1) ) {                 // All CMD 1D Rjt, 1D Rjt(PWR1 On)
+                        var dut = parseInt($('#DecInput').val());      // Page안에서의 DUT 위치.
+                        if( isNaN(dut) ) dut = 0;
+                        ATECmd.push(cmd);
+                        ATECmd.push(dut);
+                    } else if( (cmd == 0xE0) || (cmd == 0xE1) || (cmd == 0xE2) ) {                 // PMIC Default/Data/Max Set
+                        var level = parseInt($('#DecInput').val());      // 12-bit LDO Level.
+                        if( isNaN(level) ) level = 0;
+                        ATECmd.push(cmd);
+                        ATECmd.push(level);
+                    } else {
+                        ATECmd.push(cmd);
+                    }
+                    bytes = ATECommandParser(ATECmd);
+                }
+
+                if( bytes.length != 0 ) {
+                    bytes.push(0);      // operation.
+                    bytes.push(0);      // shift
+                    bytes.push(0);      // shift
+
+                    console.log(`Tx(${bytes.length}) : ` + toHexByteString(bytes));
+                    ExecuteEmulator(bytes);
+
+                    ChipClick(SelectedChip.nChip);
+                }
+            });
+
+            /*
+            function run_command(ATE) {
+                var bytes = [];
+                ATECmd = ATE;
+//                console.log(`PS2003 Command(${bytes.length}) : ` + toHexByteString(bytes));
+                console.log(`ATE Command(${ATE.length}) : ${ATECmd}`);
+                bytes = ATECommandParser(ATECmd);
+                if( bytes.length != 0 ) {
+                    bytes.push(0);
+                    bytes.push(0);
+                    bytes.push(0);
+
+                    console.log(`Tx(${bytes.length}) : ` + toHexByteString(bytes));
+                    ExecuteEmulator(bytes);
+
+                    ChipClick(SelectedChip.nChip);
+                }
+            }
+            */
+
+
+            $(document).on('change', '#SECCmd', function(e) {
+                console.log(`type = ${e.type}, target value = ${e.target.value}, ${$(this).val()}, ${$(this).selectedIndex}`);
+                var index = $("#SECCmd option:selected").index();
+//                console.log(`index = ${index}, type = ${typeof index}`);
+                var color = $(`#SECCmd option:eq(${index})`).css("background-color");
+                $('#SECCmd').css("background-color", color);
+//                console.log(`index = ${index}, background-color = ${$(this).css('background-color')}`);
+
+                var val = parseInt(e.target.value);
+
+                $('#ChipField').css('display', 'none');
+                $('#ChipNo').attr('max', 15);
+                $('#MultiField').css('display', 'none');
+                $('#Ctrl1Field').css('display', 'none');
+                $('#Ctrl2Field').css('display', 'none');
+                $('#Ctrl3Field').css('display', 'none');
+                $('#DataField').css('display', 'none');
+                $('#AddrField').css('display', 'none');
+                $('#CtrlField').css('display', 'none');
+
+                if( val == 0xA4 ) {
+                    $('#Ctrl1Field').css('display', 'block');
+//                } else if( val == 0xA2 ) {
+//                    $('#CtrlField').css('display', 'block');
+                } else if( val == 0xA5 ) {
+                    $('#ChipField').css('display', 'block');
+                    $('#Ctrl1Field').css('display', 'block');
+                } else if( val == 0xA6 ) {
+                    $('#ChipField').css('display', 'block');
+                    $('#Ctrl2Field').css('display', 'block');
+                } else if( val == 0xA7 ) {
+                    $('#ChipField').css('display', 'block');
+                    $('#Ctrl3Field').css('display', 'block');
+                } else if( val == 0xA8 ) {
+                    $('#MultiField').css('display', 'block');
+                    $('#Ctrl1Field').css('display', 'block');
+                } else if( val == 0xA9 ) {
+                    $('#DataField').css('display', 'block');
+                } else if( val == 0xAF ) {
+                    $('#AddrField').css('display', 'block');
+                    $('#AddrInput').val('0xFFFF');
+                } else if( val == 0xAE ) {
+                    $('#CtrlField').css('display', 'block');
+/*
+                } else if( val == 0x20 ) {                      // DC Grp Command.
+                    $('#ChipField').css('display', 'block');
+                } else if( val == 0x30 ) {                      // ICC/ICCQ Command.
+                    $('#ChipField').css('display', 'block');
+                } else if( val == 0x80 ) {                      // Incoming Bypass Grp.
+                    $('#ChipField').css('display', 'block');
+                } else if( val == 0xC0 ) {                      // Incoming LDO Grp.
+                    $('#ChipField').css('display', 'block');
+*/
+                } else if( val == 0x11 ) {  // All CMD 1D Rjt.
+//                    $('#ChipField').css('display', 'block');
+                    $('#DataField').css('display', 'block');
+                    $('#DecInput').attr('placeholder', 'Dut Number');
+                } else if( val == 0xB1 ) {  // 1D Rjt.(EVC On)
+//                    $('#ChipField').css('display', 'block');
+                    $('#DataField').css('display', 'block');
+                    $('#DecInput').attr('placeholder', 'Dut Number');
+                } else if( (val == 0xE0) || (val == 0xE1) || (val == 0xE2) ) {  // 1D Rjt.(EVC On)
+//                    $('#ChipField').css('display', 'block');
+                    $('#DataField').css('display', 'block');
+                    $('#DecInput').attr('placeholder', 'LDO Level');
+                } else if( val == 0xB2 ) {  // New DC Grp Command.
+                    $('#ChipNo').val('');
+                    if( maxGROUP == 10 ) {
+                        $('#ChipNo').attr('max', 0);
+                    } else if( maxGROUP == 12 ) {
+                        $('#ChipNo').attr('max', 3);
+                    } else if( maxGROUP == 16 ) {
+                        $('#ChipNo').attr('max', 9);
+                    }
+                    $('#ChipField').css('display', 'block');
+                } else if( val == 0xB4 ) {  // New ICC/ICCQ Command.
+                    $('#ChipNo').val('');
+                    if( maxGROUP == 10 ) {
+                        $('#ChipNo').attr('max', 3);
+                    } else if( maxGROUP == 12 ) {
+                        $('#ChipNo').attr('max', 7);
+                    } else if( maxGROUP == 16 ) {
+                        $('#ChipNo').attr('max', 15);
+                    }
+                    $('#ChipField').css('display', 'block');
+                } else if( (val == 0x20) || (val == 0x30) || (val == 0x40) || (val == 0x80) || (val == 0xC0) ) {  // AC Grp(LDO).
+                    $('#ChipField').css('display', 'block');
+                }
+            });
+
+            (function($) {
+                $.fn.inputFilter = function(inputFilter) {
+                    return this.on("input keydown keyup mousedown mouseup select contextmenu drop", function() {
+                        if (inputFilter(this.value)) {
+                            this.oldValue = this.value;
+                            this.oldSelectionStart = this.selectionStart;
+                            this.oldSelectionEnd = this.selectionEnd;
+                        } else if (this.hasOwnProperty("oldValue")) {
+                            this.value = this.oldValue;
+                            this.setSelectionRange(this.oldSelectionStart, this.oldSelectionEnd);
+                        } else {
+                            this.value = "";
+                        }
+                    });
+                };
+            }(jQuery));
+                
+            $("#DecInput").inputFilter(function(value) {
+                return /^\d*$/.test(value) && (value === "" || parseInt(value) < (AVin*1000));
+            });
+
+            $("#HexInput").inputFilter(function(value) {
+                return /^[0-9a-fx]*$/i.test(value);
+            });
+
+            $(document).on('change', '#Vin', function(e) {
+                AVin = parseFloat($('#Vin').val());
+                console.log(`AVin = ${AVin}`);
+            });
+
+            function OpenChipView() {
+                if( window.location.protocol === 'file:' ) {
+                    localStorage.setItem("SelectedChip", JSON.stringify(SelectedChip));
+                    localStorage.setItem("SP2003", JSON.stringify(SP2003));
+                    localStorage.setItem("nPPS", JSON.stringify(nPPS));
+                    localStorage.setItem("AVin", JSON.stringify(AVin));
+                }
+                var url = 'CHIP.html';
+
+                /*
+                // @ web client
+                url += `?CHIP=${chip}`;
+                url += `&BANK=${iBank}`;
+                url += `&AVIN=${AVin}`;
+                if( SP2003List[index].Assign == 1 ) {
+                    url += `&GROUP=${SP2003List[index].Addr}`;
+                }
+                url += `&ONOFF=${SP2003List[index].OnOff}`;
+                url += `&REJECT=${SP2003List[index].Reject}`;
+                url += `&COMMON=${SP2003List[index].COMMON}`;
+//                url += `&CLS=${SP2003List[index].CLS_FLAGS}`;
+//                url += `&TSD150=${SP2003List[index].TSD150_FLAGS}`;
+//                url += `&TSD170=${SP2003List[index].TSD170_FLAGS}`;
+                url += `&LEVEL0=${SP2003List[index].LDO02Level}`;
+                url += `&LEVEL1=${SP2003List[index].LDO13Level}`;
+                */
+
+                var width = 500;
+                var height = 410;//430;
+
+                // BankMap 화면 아래에 바로 붙여서 출력하도록 한다.
+                var left = window.screenX;
+                var top = window.screenY + window.innerHeight + 61;
+
+                var opt = `toolbar=no, menubar=no, location=no, status=no, target=_blank`;
+                opt += `, width=${width}, height=${height}, top=${top}, left=${left}`;
+                ChipWindow = window.open(url, 'SP2003', opt);
+            }
+
+            function DutClick(dut) {   // CHIP number.
+//                console.log(`SelectedChip = ${JSON.stringify(SelectedChip)}`);
+//                SelectedChip.iBank = 0;
+//                SelectedChip.iPage = 0;
+//                SelectedChip.nChip = chip;
+                var nDut = parseInt(dut);
+                SelectedChip.nDuts = [];
+                TargetBankMap.Pages.some( function(Page, PageIdx) {
+                    if( Page.Duts.includes(nDut) ) {
+                        var idx = Page.Duts.indexOf(nDut);
+                        idx = idx >> 1;
+                        SelectedChip.nChip = Page.Chips[idx];
+                        SelectedChip.nDuts.push(Page.Duts[idx << 1]);
+                        SelectedChip.nDuts.push(Page.Duts[(idx << 1) + 1]);
+
+                        return true;
+                    }
+                    return false;
+                });
+                var chip = SelectedChip.nChip;
+//                console.log(`SelectedChip = ${JSON.stringify(SelectedChip)}`);
+
+                $('.CHIP').attr('stroke', 'black');
+                $(`#CHIP${chip}`).attr('stroke', 'red');
+
+                SP2003 = SP2003List[chip - 1];
+
+                OpenChipView();
+            }
+
+            function ChipClick(chip) {   // CHIP number.
+//                console.log(`TargetBankMap = ${JSON.stringify(TargetBankMap)}`);
+                nChip = parseInt(chip);
+                SelectedChip.nChip = nChip;
+                SelectedChip.nDuts = [];
+                TargetBankMap.Pages.some( function(Page, PageIdx) {
+                    if( Page.Chips.includes(nChip) ) {
+                        var idx = Page.Chips.indexOf(nChip);
+                        console.log(`chip = ${nChip}, idx = ${idx}`);
+                        SelectedChip.nDuts.push(Page.Duts[idx << 1]);
+                        SelectedChip.nDuts.push(Page.Duts[(idx << 1) + 1]);
+
+                        return true;
+                    }
+                    console.log(`chips = ${Page.Chips}`);
+                    return false;
+                });
+//                console.log(`SelectedChip = ${JSON.stringify(SelectedChip)}`);
+                $('.CHIP').attr('stroke', 'black').attr('stroke-width', 1);
+                $(`#CHIP${chip}`).attr('stroke', 'red').attr('stroke-width', 2);
+
+                SP2003 = SP2003List[chip - 1];
+
+                OpenChipView();
+            }
+
+            $(window).on('beforeunload', function() {
+                if( (SwitchMapWindow != undefined) || (SwitchMapWindow != NaN) )
+                    SwitchMapWindow.close();
+                console.log('beforeunload');
+            });
+        </script>
+    </body>
+</html>
+
+
